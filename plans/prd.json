@@ -60,7 +60,7 @@
         "audio",
         "timer"
       ],
-      "passes": false
+      "passes": true
     }
   ],
   "generatedAt": "2026-01-09T21:21:28.776Z",

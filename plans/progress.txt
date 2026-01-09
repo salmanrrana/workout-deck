@@ -130,3 +130,50 @@ Status: COMPLETE
 - Navigation works between all sections
 
 Next step: Set up Web Audio API for timer beeps
+
+## Ticket: Set up Web Audio API for timer beeps
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created audio service using Web Audio API for reliable timer beeps
+- Implemented iOS Safari audio context handling (requires user interaction)
+- Created distinct synthesized sounds for different timer events:
+  - intervalStart: Single high-pitched beep (880Hz)
+  - intervalEnd: Double beep (660Hz)
+  - warning: Quick triple beep (440Hz, square wave)
+  - workoutComplete: Ascending celebration tones (C5-E5-G5-C6)
+- Added volume control support
+- Created React hook (useAudio) for easy component integration
+- Created AudioEnabler component for iOS Safari audio initialization
+
+### Files Created:
+- src/lib/audio.ts - Web Audio API service with sound synthesis
+- src/hooks/useAudio.ts - React hook for audio functionality
+- src/components/AudioEnabler.tsx - Button component for enabling audio
+
+### Sound Design:
+- Uses oscillator-based synthesis (no external audio files needed)
+- Exponential fade-out to prevent audio clicks
+- Different wave types for variety (sine, square)
+- Timing and frequency designed for clarity during workouts
+
+### iOS Safari Support:
+- AudioContext created on first user interaction
+- Resume handling for suspended contexts
+- AudioEnabler component provides visible "Tap to Enable Audio" button
+- Test sound plays on successful enable
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- testAllSounds() function available for testing
+
+## Epic Complete: Project Setup & Infrastructure
+All 4 tickets in this epic are now complete:
+1. Initialize Next.js project with App Router - DONE
+2. Set up Prisma with SQLite database - DONE
+3. Create base layout and navigation - DONE
+4. Set up Web Audio API for timer beeps - DONE
+
+Next epic: YouTube Video Library
