@@ -15,7 +15,7 @@
         "api",
         "videos"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "5543f891-37fa-4258-ac7e-a78377664581",

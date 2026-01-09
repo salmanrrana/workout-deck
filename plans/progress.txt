@@ -177,3 +177,36 @@ All 4 tickets in this epic are now complete:
 4. Set up Web Audio API for timer beeps - DONE
 
 Next epic: YouTube Video Library
+
+## Epic: YouTube Video Library
+Started: 2026-01-09
+
+## Ticket: Create video CRUD API routes
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created GET /api/videos - List all videos with optional tag and search filters
+- Created POST /api/videos - Create new video with validation
+- Created GET /api/videos/[id] - Get single video with exercise cues
+- Created PUT /api/videos/[id] - Update video fields
+- Created DELETE /api/videos/[id] - Delete video
+- All routes include proper error handling and status codes
+- Tags are parsed/stringified for API consumers (array format)
+
+### Files Created:
+- src/app/api/videos/route.ts - List and create video endpoints
+- src/app/api/videos/[id]/route.ts - Get, update, delete single video
+
+### API Features:
+- Filter videos by tag: GET /api/videos?tag=yoga
+- Search videos by title: GET /api/videos?search=morning
+- Duplicate youtubeId detection (returns 409 Conflict)
+- Videos include parsed tags array in responses
+- Single video includes related exercise cues
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+Next step: Build video library page with tag filtering
