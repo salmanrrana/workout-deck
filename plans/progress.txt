@@ -26,3 +26,33 @@ Created 5 epics and 24 tickets in Brain Dumpy:
 7. Polish with dashboard and presets
 
 Next step: Start development with "Initialize Next.js project with App Router"
+
+## Ticket: Initialize Next.js project with App Router
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Initialized Next.js 16.1.1 with App Router, TypeScript, and Tailwind CSS v4
+- Configured pnpm as package manager
+- Set up dark theme as default (for workout visibility)
+- Created basic home page with WorkoutDeck branding
+- Added navigation buttons for Videos and Timer sections
+- Added type-check script to package.json
+
+### Files Created:
+- package.json - Project configuration with dependencies
+- tsconfig.json - TypeScript configuration
+- next.config.ts - Next.js configuration
+- tailwind/postcss configs - Tailwind CSS v4 configuration
+- src/app/layout.tsx - Root layout with dark theme
+- src/app/page.tsx - Home page with branding
+- src/app/globals.css - Global styles with dark theme defaults
+- eslint.config.mjs - ESLint configuration
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- Dev server runs successfully (pnpm dev)
+- Note: Production build has a known Next.js 16 issue with global-error page
+
+Next step: Set up Prisma with SQLite database
