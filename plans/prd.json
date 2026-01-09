@@ -1,6 +1,157 @@
 {
   "projectName": "workout-deck",
   "projectPath": "/home/xtra/code/personal_projects/workout-deck",
-  "userStories": [],
-  "generatedAt": "2026-01-09T11:04:00Z"
+  "userStories": [
+    {
+      "epic": "Project Setup & Infrastructure",
+      "epicId": "7ff1daac-8524-4e93-acf3-4b8af5be1477",
+      "stories": [
+        {
+          "id": "1a1bb902-5b7a-4ef9-8d4c-43ec5ef71451",
+          "title": "Initialize Next.js project with App Router",
+          "priority": "high"
+        },
+        {
+          "id": "10f569b2-9353-46c5-bdd4-4ccee4935687",
+          "title": "Set up Prisma with SQLite database",
+          "priority": "high"
+        },
+        {
+          "id": "1af53de1-25a2-4c82-b2fa-174007b0fb8c",
+          "title": "Create base layout and navigation",
+          "priority": "high"
+        },
+        {
+          "id": "21521d10-3238-49f6-98ce-8290c34d392b",
+          "title": "Set up Web Audio API for timer beeps",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "epic": "YouTube Video Library",
+      "epicId": "ecf206f8-7eb6-4802-8638-aa6f0a48edbd",
+      "stories": [
+        {
+          "id": "f7f5c5fb-bc0c-4c43-a8d2-64a8ccef1716",
+          "title": "Create video CRUD API routes",
+          "priority": "high"
+        },
+        {
+          "id": "5543f891-37fa-4258-ac7e-a78377664581",
+          "title": "Build video library page with tag filtering",
+          "priority": "high"
+        },
+        {
+          "id": "37ee7359-96cc-44af-b5fe-8ab91d1a09a4",
+          "title": "Create add video form",
+          "priority": "high"
+        },
+        {
+          "id": "b9f21399-5212-4a8b-8e65-ad606bef425b",
+          "title": "Integrate YouTube IFrame API for video playback",
+          "priority": "high"
+        },
+        {
+          "id": "859eb941-d2e1-4428-a86c-d4825254821b",
+          "title": "Build video player page with workout UI",
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "epic": "Interval Timer",
+      "epicId": "e5112c51-4082-4cc5-aadb-b958433791d3",
+      "stories": [
+        {
+          "id": "f25c273c-bd1a-4490-b056-e26f316460eb",
+          "title": "Build interval timer core logic",
+          "priority": "high"
+        },
+        {
+          "id": "2d9a5f81-b5bb-443b-a30f-47073a74af0d",
+          "title": "Create timer preset CRUD API routes",
+          "priority": "medium"
+        },
+        {
+          "id": "79ea5174-c9d3-46d5-a8f2-ab1bfd6299c7",
+          "title": "Build timer display component",
+          "priority": "high"
+        },
+        {
+          "id": "0cf22730-e237-4ed6-a46b-3c785c64792e",
+          "title": "Build timer configuration UI",
+          "priority": "medium"
+        },
+        {
+          "id": "88fe923b-b68e-4cce-85bc-ae2c33949cd3",
+          "title": "Build timer presets management page",
+          "priority": "medium"
+        },
+        {
+          "id": "d94df193-4237-4033-ac60-edb10f08594b",
+          "title": "Build standalone timer page",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "epic": "Exercise Cue Overlay",
+      "epicId": "a55613be-42c6-4beb-b29e-fb795f8edfdb",
+      "stories": [
+        {
+          "id": "d5f67e27-29e7-4ce7-a5b5-e1acfc2ab437",
+          "title": "Build exercise cue overlay component",
+          "priority": "high"
+        },
+        {
+          "id": "a49bf623-a69e-45df-a977-1820b641ebc6",
+          "title": "Build manual cue editor",
+          "priority": "high"
+        },
+        {
+          "id": "82b6420e-fe21-44f3-ba9f-3b2ab458ebbc",
+          "title": "Implement YouTube transcript fetching",
+          "priority": "medium"
+        },
+        {
+          "id": "6ca28d83-bd8e-425a-9932-e9da6a2bc4b9",
+          "title": "Integrate Claude API for exercise extraction",
+          "priority": "medium"
+        },
+        {
+          "id": "05ff5faf-f66d-4974-a5a0-872be116b193",
+          "title": "Add auto-extract cues button to video page",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "epic": "Workout Tracking",
+      "epicId": "2e38d7c7-2731-44c4-92f1-6d8b6d83b3bc",
+      "stories": [
+        {
+          "id": "4162e2c5-8430-4dfd-ba9e-a3e745fe30d6",
+          "title": "Create workout log API routes",
+          "priority": "medium"
+        },
+        {
+          "id": "7a390d6b-4642-441c-8092-5d97a76f6370",
+          "title": "Add log workout button to video player",
+          "priority": "medium"
+        },
+        {
+          "id": "8d8d0fdb-939c-475b-a538-f997eb861812",
+          "title": "Build workout history page",
+          "priority": "medium"
+        },
+        {
+          "id": "e12d6c55-cf51-4fb9-b398-cc19e9448715",
+          "title": "Build dashboard home page",
+          "priority": "low"
+        }
+      ]
+    }
+  ],
+  "generatedAt": "2026-01-09T17:24:00Z"
 }
