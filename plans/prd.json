@@ -30,7 +30,7 @@
         "ui",
         "videos"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "37ee7359-96cc-44af-b5fe-8ab91d1a09a4",
