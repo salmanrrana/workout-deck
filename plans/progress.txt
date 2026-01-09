@@ -243,3 +243,36 @@ Status: COMPLETE
 - Linting passes (pnpm lint)
 
 Next step: Create add video form
+
+## Ticket: Create add video form
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created YouTube URL parser supporting multiple URL formats (watch, youtu.be, embed)
+- Added API route to fetch video info via oEmbed (no API key required)
+- Built /videos/new page with full add video form
+- YouTube URL validation with live thumbnail preview
+- Auto-fetch video title from YouTube
+- Tag selector with suggestions from existing tags
+- Notes field for additional video information
+- Large touch targets (min 44px) for iPad usability
+
+### Files Created:
+- src/lib/youtube.ts - YouTube URL parsing and oEmbed utilities
+- src/app/api/youtube/info/route.ts - API route for video info
+- src/app/videos/new/page.tsx - Add video form page
+
+### Form Features:
+- Debounced URL input with live preview
+- Auto-populated title from YouTube
+- Tag input with keyboard navigation (Enter/comma to add, Backspace to remove)
+- Tag suggestions from existing video tags
+- Error handling and validation
+- Loading states during submission
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+Next step: Integrate YouTube IFrame API for video playback

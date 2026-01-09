@@ -45,7 +45,7 @@
         "ui",
         "videos"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "b9f21399-5212-4a8b-8e65-ad606bef425b",
