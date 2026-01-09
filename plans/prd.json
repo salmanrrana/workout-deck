@@ -3,39 +3,24 @@
   "projectPath": "/home/xtra/code/personal_projects/workout-deck",
   "userStories": [
     {
-      "id": "1a1bb902-5b7a-4ef9-8d4c-43ec5ef71451",
-      "title": "Initialize Next.js project with App Router",
-      "description": "Set up a new Next.js 14 project with App Router, TypeScript, and Tailwind CSS. Configure the basic project structure.",
+      "id": "f7f5c5fb-bc0c-4c43-a8d2-64a8ccef1716",
+      "title": "Create video CRUD API routes",
+      "description": "Build API routes for video management:\n- GET /api/videos - List all videos with optional tag filter\n- POST /api/videos - Create new video\n- GET /api/videos/[id] - Get single video\n- PUT /api/videos/[id] - Update video\n- DELETE /api/videos/[id] - Delete video",
       "acceptanceCriteria": [
         "Implement as described",
         "Verify functionality works as expected"
       ],
       "priority": "high",
       "tags": [
-        "setup",
-        "nextjs"
+        "api",
+        "videos"
       ],
-      "passes": true
+      "passes": false
     },
     {
-      "id": "10f569b2-9353-46c5-bdd4-4ccee4935687",
-      "title": "Set up Prisma with SQLite database",
-      "description": "Install and configure Prisma ORM with SQLite. Create initial schema with Video, ExerciseCue, TimerPreset, and WorkoutLog models.",
-      "acceptanceCriteria": [
-        "Implement as described",
-        "Verify functionality works as expected"
-      ],
-      "priority": "high",
-      "tags": [
-        "setup",
-        "database"
-      ],
-      "passes": true
-    },
-    {
-      "id": "1af53de1-25a2-4c82-b2fa-174007b0fb8c",
-      "title": "Create base layout and navigation",
-      "description": "Create the root layout with dark theme, navigation header with links to main sections (Videos, Timer, History). Optimize for iPad landscape view with large touch targets.",
+      "id": "5543f891-37fa-4258-ac7e-a78377664581",
+      "title": "Build video library page with tag filtering",
+      "description": "Create /videos page showing all saved videos in a grid/list. Include:\n- Tag filter sidebar/bar\n- Search by title\n- Video thumbnail preview\n- Quick actions (play, edit, delete)",
       "acceptanceCriteria": [
         "Implement as described",
         "Verify functionality works as expected"
@@ -43,26 +28,57 @@
       "priority": "high",
       "tags": [
         "ui",
-        "layout"
+        "videos"
       ],
-      "passes": true
+      "passes": false
     },
     {
-      "id": "21521d10-3238-49f6-98ce-8290c34d392b",
-      "title": "Set up Web Audio API for timer beeps",
-      "description": "Create an audio service using Web Audio API for reliable timer beeps. Handle iOS Safari audio context restrictions (require user interaction to enable). Create distinct sounds for interval start, end, and workout complete.",
+      "id": "37ee7359-96cc-44af-b5fe-8ab91d1a09a4",
+      "title": "Create add video form",
+      "description": "Build /videos/new page or modal for adding videos:\n- YouTube URL input with validation\n- Auto-fetch video title from YouTube (or manual entry)\n- Tag selector (multi-select, create new tags)\n- Optional notes field",
       "acceptanceCriteria": [
         "Implement as described",
         "Verify functionality works as expected"
       ],
-      "priority": "medium",
+      "priority": "high",
       "tags": [
-        "audio",
-        "timer"
+        "ui",
+        "videos"
       ],
-      "passes": true
+      "passes": false
+    },
+    {
+      "id": "b9f21399-5212-4a8b-8e65-ad606bef425b",
+      "title": "Integrate YouTube IFrame API for video playback",
+      "description": "Set up YouTube IFrame API integration:\n- Embed player on video detail page\n- Control playback (play, pause, seek)\n- Get current playback time for syncing with cues\n- Handle player events",
+      "acceptanceCriteria": [
+        "Implement as described",
+        "Verify functionality works as expected"
+      ],
+      "priority": "high",
+      "tags": [
+        "youtube",
+        "videos"
+      ],
+      "passes": false
+    },
+    {
+      "id": "859eb941-d2e1-4428-a86c-d4825254821b",
+      "title": "Build video player page with workout UI",
+      "description": "Create /videos/[id] page - the main workout screen:\n- Large YouTube player\n- Timer display panel\n- Exercise cue overlay area\n- Controls for timer and video\n- Log workout button",
+      "acceptanceCriteria": [
+        "Implement as described",
+        "Verify functionality works as expected"
+      ],
+      "priority": "high",
+      "tags": [
+        "ui",
+        "videos",
+        "workout"
+      ],
+      "passes": false
     }
   ],
-  "generatedAt": "2026-01-09T21:21:28.776Z",
-  "epicTitle": "Project Setup & Infrastructure"
+  "generatedAt": "2026-01-09T23:00:00.000Z",
+  "epicTitle": "YouTube Video Library"
 }
