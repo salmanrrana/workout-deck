@@ -56,3 +56,41 @@ Status: COMPLETE
 - Note: Production build has a known Next.js 16 issue with global-error page
 
 Next step: Set up Prisma with SQLite database
+
+## Ticket: Set up Prisma with SQLite database
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Installed Prisma 7.2.0 with SQLite provider
+- Installed @prisma/adapter-better-sqlite3 for driver adapter support
+- Created database schema with all required models:
+  - Video (id, youtubeId, title, tags, notes, timestamps)
+  - ExerciseCue (id, videoId, timestamp, exerciseName, order)
+  - TimerPreset (id, name, intervals, timestamps)
+  - WorkoutLog (id, videoId, timerPresetId, completedAt, duration, notes)
+- Set up proper relations and indexes
+- Created initial migration
+- Created database utility file for Next.js singleton pattern
+- Created TypeScript types for JSON fields (IntervalConfig, helper functions)
+
+### Files Created:
+- prisma/schema.prisma - Database schema
+- prisma/migrations/20260109213128_init/ - Initial migration
+- prisma.config.ts - Prisma configuration
+- src/lib/db.ts - Database client singleton
+- src/lib/types.ts - TypeScript types for JSON fields
+- .env - Database URL configuration (gitignored)
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- Migration applied successfully
+- Prisma client generated
+
+### Notes:
+- Prisma 7 requires explicit driver adapters (using @prisma/adapter-better-sqlite3)
+- Tags and intervals stored as JSON strings in SQLite (no native array support)
+- Helper functions in types.ts for parsing/stringifying JSON fields
+
+Next step: Create base layout and navigation

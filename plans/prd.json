@@ -30,7 +30,7 @@
         "setup",
         "database"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "1af53de1-25a2-4c82-b2fa-174007b0fb8c",

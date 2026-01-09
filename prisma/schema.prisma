@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Video {
+  id        String   @id @default(uuid())
+  youtubeId String   @unique
+  title     String
+  tags      String   @default("[]") // JSON array of strings
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cues        ExerciseCue[]
+  workoutLogs WorkoutLog[]
+}
+
+model ExerciseCue {
+  id           String @id @default(uuid())
+  videoId      String
+  timestamp    Int // seconds into the video
+  exerciseName String
+  order        Int
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+}
+
+model TimerPreset {
+  id        String   @id @default(uuid())
+  name      String
+  intervals String   @default("[]") // JSON array of IntervalConfig objects
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workoutLogs WorkoutLog[]
+}
+
+// IntervalConfig shape (stored as JSON in TimerPreset.intervals):
+// {
+//   type: "work" | "rest" | "countdown" | "transition"
+//   duration: number (seconds)
+//   rounds?: number
+//   beepInterval?: number (seconds)
+// }
+
+model WorkoutLog {
+  id            String   @id @default(uuid())
+  videoId       String?
+  timerPresetId String?
+  completedAt   DateTime @default(now())
+  duration      Int? // seconds
+  notes         String?
+
+  video       Video?       @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  timerPreset TimerPreset? @relation(fields: [timerPresetId], references: [id], onDelete: SetNull)
+
+  @@index([videoId])
+  @@index([timerPresetId])
+  @@index([completedAt])
+}
