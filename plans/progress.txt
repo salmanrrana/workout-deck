@@ -94,3 +94,39 @@ Status: COMPLETE
 - Helper functions in types.ts for parsing/stringifying JSON fields
 
 Next step: Create base layout and navigation
+
+## Ticket: Create base layout and navigation
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created Navigation component with sticky header
+- Added links to Home, Videos, Timer, and History sections
+- Implemented active state highlighting for current route
+- Optimized for iPad landscape with large touch targets (min 44x44px)
+- Updated root layout to include navigation
+- Added viewport meta for mobile optimization (no user scaling)
+- Created placeholder pages for Videos, Timer, and History routes
+- Updated home page with large, touch-friendly action cards
+
+### Files Created/Modified:
+- src/components/Navigation.tsx - Navigation header component
+- src/app/layout.tsx - Updated with Navigation and viewport config
+- src/app/page.tsx - Updated home page with action cards
+- src/app/videos/page.tsx - Placeholder videos page
+- src/app/timer/page.tsx - Placeholder timer page
+- src/app/history/page.tsx - Placeholder history page
+
+### UI Features:
+- Dark theme throughout (zinc-950 background)
+- High contrast text (white on dark)
+- Large touch targets for iPad use
+- Responsive design (mobile to desktop)
+- Color-coded sections (green=videos, blue=timer, gray=history)
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- Navigation works between all sections
+
+Next step: Set up Web Audio API for timer beeps
