@@ -5,14 +5,8 @@ import Link from "next/link";
 import { YouTubePlayer, useYouTubePlayer } from "@/components/YouTubePlayer";
 import type { PlayerState } from "@/components/YouTubePlayer";
 import { ExerciseCueOverlay } from "@/components/ExerciseCueOverlay";
-
-interface ExerciseCue {
-  id: string;
-  videoId: string;
-  timestamp: number;
-  exerciseName: string;
-  order: number;
-}
+import type { ExerciseCue } from "@/lib/types";
+import { formatTime } from "@/lib/types";
 
 interface Video {
   id: string;
@@ -21,12 +15,6 @@ interface Video {
   tags: string[];
   notes: string | null;
   cues: ExerciseCue[];
-}
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 function stateColor(state: PlayerState): string {
@@ -78,10 +66,10 @@ export default function VideoPlayerPage({
           return;
         }
         const data = await res.json();
-        // Defensively sort cues by timestamp for correct overlay syncing
-        if (Array.isArray(data.cues)) {
-          data.cues.sort((a: ExerciseCue, b: ExerciseCue) => a.timestamp - b.timestamp);
-        }
+        // Normalize cues to array and sort by timestamp for correct overlay syncing
+        data.cues = Array.isArray(data.cues)
+          ? data.cues.sort((a: ExerciseCue, b: ExerciseCue) => a.timestamp - b.timestamp)
+          : [];
         setVideo(data);
       } catch (err) {
         console.error("Failed to load video:", err);

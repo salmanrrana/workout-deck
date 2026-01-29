@@ -1,3 +1,20 @@
+// Shared domain types
+
+export interface ExerciseCue {
+  id: string;
+  videoId: string;
+  timestamp: number;
+  exerciseName: string;
+  order: number;
+}
+
+// Format seconds as "m:ss" for display
+export function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
 // Types for JSON fields stored in the database
 
 export type IntervalType = "work" | "rest" | "countdown" | "transition";

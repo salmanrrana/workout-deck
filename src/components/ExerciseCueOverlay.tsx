@@ -1,20 +1,8 @@
 "use client";
 
 import { useState } from "react";
-
-interface ExerciseCue {
-  id: string;
-  videoId: string;
-  timestamp: number;
-  exerciseName: string;
-  order: number;
-}
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
+import type { ExerciseCue } from "@/lib/types";
+import { formatTime } from "@/lib/types";
 
 interface ExerciseCueOverlayProps {
   activeCue: ExerciseCue | null;
@@ -33,18 +21,14 @@ export function ExerciseCueOverlay({
 
   if (!cues.length) return null;
 
-  // Find upcoming cues (next 1-2 after active)
-  const upcomingCues: ExerciseCue[] = [];
-  let foundActive = activeCue === null;
-  for (const cue of cues) {
-    if (foundActive && cue.timestamp > currentTime) {
-      upcomingCues.push(cue);
-      if (upcomingCues.length >= 2) break;
-    }
-    if (cue.id === activeCue?.id) {
-      foundActive = true;
-    }
-  }
+  // Find next 1-2 cues after the active one
+  const activeIndex = activeCue
+    ? cues.findIndex((c) => c.id === activeCue.id)
+    : -1;
+  const upcomingCues = cues
+    .slice(activeIndex + 1)
+    .filter((cue) => cue.timestamp > currentTime)
+    .slice(0, 2);
 
   return (
     <div className="relative">
