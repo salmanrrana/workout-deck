@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, use } from "react";
 import Link from "next/link";
 import { YouTubePlayer, useYouTubePlayer } from "@/components/YouTubePlayer";
 import type { PlayerState } from "@/components/YouTubePlayer";
+import { ExerciseCueOverlay } from "@/components/ExerciseCueOverlay";
 
 interface ExerciseCue {
   id: string;
@@ -336,67 +337,6 @@ export default function VideoPlayerPage({
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// Exercise Cue Overlay - displayed prominently during playback
-function ExerciseCueOverlay({
-  activeCue,
-  cues,
-  currentTime,
-  onSeek,
-}: {
-  activeCue: ExerciseCue | null;
-  cues: ExerciseCue[];
-  currentTime: number;
-  onSeek: (seconds: number) => void;
-}) {
-  if (!cues.length) return null;
-
-  // Find next cue
-  const nextCue = cues.find((c) => c.timestamp > currentTime) ?? null;
-
-  return (
-    <div className="rounded-xl bg-zinc-900 p-4">
-      {/* Active cue - prominent display */}
-      {activeCue ? (
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-600">
-            <span className="text-sm font-bold text-white">
-              {activeCue.order}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-lg font-bold text-white">
-              {activeCue.exerciseName}
-            </p>
-            <p className="text-sm text-zinc-400">
-              Started at {formatTime(activeCue.timestamp)}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <p className="text-center text-sm text-zinc-500">
-          Waiting for first exercise cue...
-        </p>
-      )}
-
-      {/* Next cue preview */}
-      {nextCue && (
-        <button
-          onClick={() => onSeek(nextCue.timestamp)}
-          className="mt-3 flex min-h-[44px] w-full items-center gap-3 rounded-lg bg-zinc-800 px-3 py-2 text-left transition-colors hover:bg-zinc-700"
-        >
-          <span className="text-xs text-zinc-500">Next:</span>
-          <span className="text-sm text-zinc-300">
-            {nextCue.exerciseName}
-          </span>
-          <span className="ml-auto font-mono text-xs text-zinc-500">
-            {formatTime(nextCue.timestamp)}
-          </span>
-        </button>
-      )}
     </div>
   );
 }
