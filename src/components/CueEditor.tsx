@@ -58,7 +58,8 @@ export function CueEditor({
         onCuesChange(updated);
         setExerciseName("");
         setTimestamp("");
-      } catch {
+      } catch (err) {
+        console.error("Cue operation failed:", err);
         setError("Network error. Please try again.");
       } finally {
         setSaving(false);
@@ -97,7 +98,8 @@ export function CueEditor({
           return;
         }
         onCuesChange(cues.filter((c) => c.id !== cueId));
-      } catch {
+      } catch (err) {
+        console.error("Cue operation failed:", err);
         setError("Network error. Please try again.");
       } finally {
         setSaving(false);
@@ -146,7 +148,8 @@ export function CueEditor({
           updatedCues.sort((a, b) => a.timestamp - b.timestamp)
         );
         setEditingId(null);
-      } catch {
+      } catch (err) {
+        console.error("Cue operation failed:", err);
         setError("Network error. Please try again.");
       } finally {
         setSaving(false);
@@ -180,7 +183,8 @@ export function CueEditor({
           return;
         }
         onCuesChange(withOrders);
-      } catch {
+      } catch (err) {
+        console.error("Cue operation failed:", err);
         setError("Network error. Please try again.");
       } finally {
         setSaving(false);

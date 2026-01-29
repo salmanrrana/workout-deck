@@ -121,10 +121,9 @@ export default function VideoPlayerPage({
   // Update cues when edited
   const handleCuesChange = useCallback(
     (newCues: ExerciseCue[]) => {
-      if (!video) return;
-      setVideo({ ...video, cues: newCues });
+      setVideo((prev) => (prev ? { ...prev, cues: newCues } : prev));
     },
-    [video]
+    []
   );
 
   // Log workout

@@ -128,6 +128,21 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // Verify all cue IDs belong to this video
+    const existingCues = await prisma.exerciseCue.findMany({
+      where: { videoId: id },
+      select: { id: true },
+    });
+    const validIds = new Set(existingCues.map((c) => c.id));
+    for (const cue of cues) {
+      if (!validIds.has(cue.id)) {
+        return NextResponse.json(
+          { error: "One or more cues do not belong to this video" },
+          { status: 403 }
+        );
+      }
+    }
+
     // Update all cues in a transaction
     const updated = await prisma.$transaction(
       cues.map((cue: { id: string; timestamp: number; exerciseName: string; order: number }) =>
