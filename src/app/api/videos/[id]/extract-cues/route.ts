@@ -54,12 +54,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Optionally accept a save=true parameter to persist cues
-    let body: { save?: boolean } = {};
+    // Optionally accept save=true and/or pre-extracted cues
+    let body: { save?: boolean; cues?: ExtractedCue[] } = {};
     try {
       body = await request.json();
     } catch {
       // No body is fine - defaults to not saving
+    }
+
+    // If cues are provided (from a previous preview), save them directly
+    if (body.save && Array.isArray(body.cues)) {
+      const validCues = validateAndCleanCues(body.cues, id);
+      const savedCues = await saveCues(video.id, validCues);
+      return NextResponse.json({ cues: savedCues, saved: true });
     }
 
     // Fetch transcript
@@ -129,50 +136,24 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Validate and clean extracted cues
-    const validCues = extractedCues
-      .filter(
-        (cue) =>
-          typeof cue.timestamp === "number" &&
-          cue.timestamp >= 0 &&
-          typeof cue.exerciseName === "string" &&
-          cue.exerciseName.trim().length > 0
-      )
-      .map((cue, index) => ({
-        timestamp: Math.floor(cue.timestamp),
-        exerciseName: cue.exerciseName.trim(),
-        order: index + 1,
-      }));
+    const validCues = validateAndCleanCues(extractedCues, id);
 
-    const filteredCount = extractedCues.length - validCues.length;
-    if (filteredCount > 0) {
-      console.warn(
-        `Filtered out ${filteredCount} invalid cue(s) for video ${id}`
-      );
-    }
-
-    // If save=true, persist to database atomically
+    // If save=true (without pre-provided cues), persist extraction results
     if (body.save) {
-      await prisma.$transaction(async (tx) => {
-        await tx.exerciseCue.deleteMany({
-          where: { videoId: video.id },
-        });
-        for (const cue of validCues) {
-          await tx.exerciseCue.create({
-            data: {
-              videoId: video.id,
-              timestamp: cue.timestamp,
-              exerciseName: cue.exerciseName,
-              order: cue.order,
-            },
-          });
-        }
+      const savedCues = await saveCues(video.id, validCues);
+      return NextResponse.json({
+        cues: savedCues,
+        saved: true,
+        transcript: {
+          language: transcript.language,
+          segmentCount: transcript.segments.length,
+        },
       });
     }
 
     return NextResponse.json({
       cues: validCues,
-      saved: body.save ?? false,
+      saved: false,
       transcript: {
         language: transcript.language,
         segmentCount: transcript.segments.length,
@@ -206,4 +187,57 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     );
   }
+}
+
+function validateAndCleanCues(
+  cues: ExtractedCue[],
+  videoId: string
+): { timestamp: number; exerciseName: string; order: number }[] {
+  const validCues = cues
+    .filter(
+      (cue) =>
+        typeof cue.timestamp === "number" &&
+        cue.timestamp >= 0 &&
+        typeof cue.exerciseName === "string" &&
+        cue.exerciseName.trim().length > 0
+    )
+    .map((cue, index) => ({
+      timestamp: Math.floor(cue.timestamp),
+      exerciseName: cue.exerciseName.trim(),
+      order: index + 1,
+    }));
+
+  const filteredCount = cues.length - validCues.length;
+  if (filteredCount > 0) {
+    console.warn(
+      `Filtered out ${filteredCount} invalid cue(s) for video ${videoId}`
+    );
+  }
+
+  return validCues;
+}
+
+async function saveCues(
+  videoId: string,
+  cues: { timestamp: number; exerciseName: string; order: number }[]
+) {
+  const savedCues = await prisma.$transaction(async (tx) => {
+    await tx.exerciseCue.deleteMany({
+      where: { videoId },
+    });
+    const created = [];
+    for (const cue of cues) {
+      const saved = await tx.exerciseCue.create({
+        data: {
+          videoId,
+          timestamp: cue.timestamp,
+          exerciseName: cue.exerciseName,
+          order: cue.order,
+        },
+      });
+      created.push(saved);
+    }
+    return created;
+  });
+  return savedCues;
 }

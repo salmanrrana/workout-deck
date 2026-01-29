@@ -35,11 +35,11 @@ export function AutoExtractButton({
         method: "POST",
       });
       if (!res.ok) {
-        const data = await res.json();
-        setState({
-          status: "error",
-          message: data.message || data.error || "Failed to extract cues",
-        });
+        const message = await parseErrorMessage(
+          res,
+          "Failed to extract cues"
+        );
+        setState({ status: "error", message });
         return;
       }
       const data = await res.json();
@@ -61,40 +61,23 @@ export function AutoExtractButton({
   };
 
   const handleSave = async () => {
+    if (state.status !== "preview") return;
+    const previewedCues = state.cues;
     setState({ status: "saving" });
     try {
       const res = await fetch(`/api/videos/${videoId}/extract-cues`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ save: true }),
+        body: JSON.stringify({ save: true, cues: previewedCues }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        setState({
-          status: "error",
-          message: data.error || "Failed to save cues",
-        });
+        const message = await parseErrorMessage(res, "Failed to save cues");
+        setState({ status: "error", message });
         return;
       }
       const data = await res.json();
-      // Notify parent with saved cues (they now have IDs from DB)
-      // Re-fetch cues from the CRUD endpoint to get proper ExerciseCue objects with IDs
-      const cuesRes = await fetch(`/api/videos/${videoId}/cues`);
-      if (cuesRes.ok) {
-        const cuesData = await cuesRes.json();
-        onCuesExtracted(cuesData.cues);
-      } else {
-        // Fallback: use extract response cues (won't have DB IDs)
-        onCuesExtracted(
-          data.cues.map((c: ExtractedCue, i: number) => ({
-            id: `temp-${i}`,
-            videoId,
-            timestamp: c.timestamp,
-            exerciseName: c.exerciseName,
-            order: c.order,
-          }))
-        );
-      }
+      // Server returns saved cues with DB-assigned IDs
+      onCuesExtracted(data.cues);
       setState({ status: "idle" });
     } catch (err) {
       console.error("Failed to save cues:", err);
@@ -220,6 +203,18 @@ export function AutoExtractButton({
       </div>
     </div>
   );
+}
+
+async function parseErrorMessage(
+  res: Response,
+  fallback: string
+): Promise<string> {
+  try {
+    const data = await res.json();
+    return data.message || data.error || fallback;
+  } catch {
+    return `Server error (${res.status}). Please try again later.`;
+  }
 }
 
 function SparklesIcon({ className }: { className?: string }) {
