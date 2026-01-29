@@ -6,6 +6,7 @@ import { YouTubePlayer, useYouTubePlayer } from "@/components/YouTubePlayer";
 import type { PlayerState } from "@/components/YouTubePlayer";
 import { ExerciseCueOverlay } from "@/components/ExerciseCueOverlay";
 import { CueEditor } from "@/components/CueEditor";
+import { AutoExtractButton } from "@/components/AutoExtractButton";
 import type { ExerciseCue } from "@/lib/types";
 import { formatTime } from "@/lib/types";
 
@@ -305,6 +306,12 @@ export default function VideoPlayerPage({
           {logError && (
             <p className="text-center text-sm text-red-400">{logError}</p>
           )}
+
+          {/* Auto-Extract Cues */}
+          <AutoExtractButton
+            videoId={video.id}
+            onCuesExtracted={handleCuesChange}
+          />
 
           {/* Exercise Cues List */}
           {video.cues.length > 0 && (
