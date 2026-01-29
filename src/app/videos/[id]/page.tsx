@@ -5,6 +5,7 @@ import Link from "next/link";
 import { YouTubePlayer, useYouTubePlayer } from "@/components/YouTubePlayer";
 import type { PlayerState } from "@/components/YouTubePlayer";
 import { ExerciseCueOverlay } from "@/components/ExerciseCueOverlay";
+import { CueEditor } from "@/components/CueEditor";
 import type { ExerciseCue } from "@/lib/types";
 import { formatTime } from "@/lib/types";
 
@@ -115,6 +116,15 @@ export default function VideoPlayerPage({
       }
     },
     [player.handlers, video?.cues]
+  );
+
+  // Update cues when edited
+  const handleCuesChange = useCallback(
+    (newCues: ExerciseCue[]) => {
+      if (!video) return;
+      setVideo({ ...video, cues: newCues });
+    },
+    [video]
   );
 
   // Log workout
@@ -323,6 +333,14 @@ export default function VideoPlayerPage({
               </div>
             </div>
           )}
+
+          {/* Cue Editor */}
+          <CueEditor
+            videoId={video.id}
+            cues={video.cues}
+            currentTime={player.currentTime}
+            onCuesChange={handleCuesChange}
+          />
         </div>
       </div>
     </div>
