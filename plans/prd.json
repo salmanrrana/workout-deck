@@ -60,7 +60,7 @@
         "youtube",
         "videos"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "859eb941-d2e1-4428-a86c-d4825254821b",
@@ -76,7 +76,7 @@
         "videos",
         "workout"
       ],
-      "passes": false
+      "passes": true
     }
   ],
   "generatedAt": "2026-01-09T23:00:00.000Z",

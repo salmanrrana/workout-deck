@@ -276,3 +276,60 @@ Status: COMPLETE
 - Linting passes (pnpm lint)
 
 Next step: Integrate YouTube IFrame API for video playback
+
+## Ticket: Integrate YouTube IFrame API for video playback
+Date: 2026-01-29
+Status: COMPLETE (previously committed dc25f88)
+
+### Changes Made:
+- Created YouTubePlayer component with full IFrame API integration
+- Singleton API loading pattern with callback queue
+- Player state management (unstarted, playing, paused, buffering, ended, cued)
+- Time update polling at 100ms intervals while playing
+- Created useYouTubePlayer hook for parent component control
+- Full TypeScript type declarations for YT.Player interface
+- Proper cleanup on unmount (destroy player, clear intervals)
+- Added onPlayerRef callback for registering player instance with external hooks
+
+### Files Created:
+- src/components/YouTubePlayer.tsx - YouTube IFrame API component and hook
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+## Ticket: Build video player page with workout UI
+Date: 2026-01-29
+Status: COMPLETE
+
+### Changes Made:
+- Created /videos/[id] page with full workout UI
+- Large YouTube player with play/pause/restart controls
+- Timer display panel showing elapsed time and playback state
+- Exercise cue overlay synced with video playback time
+- Active cue display with order number and exercise name
+- Next cue preview with seek-to button
+- Clickable cue list in sidebar for seeking to timestamps
+- Log workout button with POST to /api/workout-logs
+- Created workout-logs API route with input validation
+- Responsive layout: player + info on left, controls + cues on right
+
+### Files Created:
+- src/app/videos/[id]/page.tsx - Video player page with workout UI
+- src/app/api/workout-logs/route.ts - Workout logging API
+
+### Review Fixes Applied:
+- Fixed YouTubePlayer hook registration (onPlayerRef callback)
+- Added error feedback for workout log failures
+- Added input validation to workout-logs API
+- Used ?? instead of || for nullish coalescing
+- Defensive sort on exercise cues by timestamp
+- Fixed touch targets to 44px minimum
+- Added setTimeout cleanup on unmount
+- Added error logging in catch blocks
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+Next step: Epic complete - all YouTube Video Library tickets done
