@@ -1,6 +1,3 @@
-// YouTube transcript fetching service
-// Uses YouTube's innertube API to fetch auto-generated or manual captions
-
 export interface TranscriptSegment {
   text: string;
   startSeconds: number;
@@ -12,9 +9,13 @@ export interface TranscriptResult {
   language: string;
 }
 
-// Simple in-memory cache with TTL
-const cache = new Map<string, { result: TranscriptResult; expiresAt: number }>();
+// In-memory cache with TTL and size limit
+const cache = new Map<string, { result: TranscriptResult | null; expiresAt: number }>();
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const NEGATIVE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes for "no captions" results
+const MAX_CACHE_SIZE = 100;
+
+const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{11}$/;
 
 /**
  * Fetch transcript for a YouTube video by its video ID.
@@ -24,10 +25,19 @@ const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 export async function fetchTranscript(
   videoId: string
 ): Promise<TranscriptResult | null> {
-  // Check cache
+  if (!videoId || !YOUTUBE_ID_REGEX.test(videoId)) {
+    console.error(`Invalid YouTube video ID: "${videoId}"`);
+    return null;
+  }
+
+  // Check cache (includes negative results)
   const cached = cache.get(videoId);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.result;
+  }
+  // Evict expired entry
+  if (cached) {
+    cache.delete(videoId);
   }
 
   try {
@@ -53,11 +63,15 @@ export async function fetchTranscript(
     const html = await videoPageRes.text();
 
     // Step 2: Extract player response to find caption tracks
+    // Use [\s\S] instead of . to match newlines (TypeScript target may not support /s flag)
     const playerMatch = html.match(
-      /var ytInitialPlayerResponse\s*=\s*(\{.+?\});/
+      /var ytInitialPlayerResponse\s*=\s*(\{[\s\S]+?\});/
     );
     if (!playerMatch) {
-      // No player response found - video may be unavailable
+      console.warn(
+        `No ytInitialPlayerResponse found for ${videoId}. Video may be unavailable.`
+      );
+      cacheResult(videoId, null);
       return null;
     }
 
@@ -75,13 +89,17 @@ export async function fetchTranscript(
     try {
       playerResponse = JSON.parse(playerMatch[1]);
     } catch {
-      console.error(`Failed to parse player response for ${videoId}`);
+      console.error(
+        `Failed to parse player response for ${videoId}. Captured length: ${playerMatch[1].length}`
+      );
       return null;
     }
 
     const tracks =
       playerResponse.captions?.playerCaptionsTracklistRenderer?.captionTracks;
     if (!tracks || tracks.length === 0) {
+      console.info(`Video ${videoId} has no caption tracks.`);
+      cacheResult(videoId, null);
       return null;
     }
 
@@ -96,7 +114,7 @@ export async function fetchTranscript(
     const selectedTrack =
       englishTrack ?? englishAutoTrack ?? manualTrack ?? tracks[0];
 
-    // Step 3: Fetch the transcript XML
+    // Step 3: Fetch the transcript in JSON3 format
     const transcriptUrl = selectedTrack.baseUrl + "&fmt=json3";
     const transcriptRes = await fetch(transcriptUrl);
 
@@ -108,15 +126,12 @@ export async function fetchTranscript(
     }
 
     const transcriptJson = await transcriptRes.json();
-    const events = transcriptJson.events as
-      | Array<{
-          tStartMs?: number;
-          dDurationMs?: number;
-          segs?: Array<{ utf8: string }>;
-        }>
-      | undefined;
+    const events = transcriptJson?.events;
 
-    if (!events) {
+    if (!Array.isArray(events)) {
+      console.error(
+        `Transcript JSON for ${videoId} has no events array.`
+      );
       return null;
     }
 
@@ -126,7 +141,7 @@ export async function fetchTranscript(
       if (!event.segs || event.tStartMs === undefined) continue;
 
       const text = event.segs
-        .map((s) => s.utf8)
+        .map((s: { utf8: string }) => s.utf8)
         .join("")
         .replace(/\n/g, " ")
         .trim();
@@ -140,6 +155,10 @@ export async function fetchTranscript(
     }
 
     if (segments.length === 0) {
+      console.warn(
+        `All events for ${videoId} produced zero segments.`
+      );
+      cacheResult(videoId, null);
       return null;
     }
 
@@ -148,15 +167,23 @@ export async function fetchTranscript(
       language: selectedTrack.languageCode,
     };
 
-    // Cache the result
-    cache.set(videoId, {
-      result,
-      expiresAt: Date.now() + CACHE_TTL_MS,
-    });
-
+    cacheResult(videoId, result);
     return result;
   } catch (error) {
     console.error(`Error fetching transcript for ${videoId}:`, error);
     return null;
   }
+}
+
+function cacheResult(videoId: string, result: TranscriptResult | null): void {
+  // Evict oldest entries if cache is full
+  if (cache.size >= MAX_CACHE_SIZE) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey) cache.delete(firstKey);
+  }
+
+  cache.set(videoId, {
+    result,
+    expiresAt: Date.now() + (result ? CACHE_TTL_MS : NEGATIVE_CACHE_TTL_MS),
+  });
 }
