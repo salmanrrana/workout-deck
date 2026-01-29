@@ -28,6 +28,19 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
+function stateColor(state: PlayerState): string {
+  switch (state) {
+    case "playing":
+      return "bg-green-500";
+    case "paused":
+      return "bg-yellow-500";
+    case "ended":
+      return "bg-red-500";
+    default:
+      return "bg-zinc-500";
+  }
+}
+
 export default function VideoPlayerPage({
   params,
 }: {
@@ -40,10 +53,19 @@ export default function VideoPlayerPage({
   const [activeCue, setActiveCue] = useState<ExerciseCue | null>(null);
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
   const [workoutStartTime, setWorkoutStartTime] = useState<number | null>(null);
 
   const player = useYouTubePlayer();
   const prevCueRef = useRef<string | null>(null);
+  const logTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup setTimeout on unmount
+  useEffect(() => {
+    return () => {
+      if (logTimeoutRef.current) clearTimeout(logTimeoutRef.current);
+    };
+  }, []);
 
   // Fetch video data
   useEffect(() => {
@@ -51,16 +73,17 @@ export default function VideoPlayerPage({
       try {
         const res = await fetch(`/api/videos/${id}`);
         if (!res.ok) {
-          if (res.status === 404) {
-            setError("Video not found");
-          } else {
-            setError("Failed to load video");
-          }
+          setError(res.status === 404 ? "Video not found" : "Failed to load video");
           return;
         }
         const data = await res.json();
+        // Defensively sort cues by timestamp for correct overlay syncing
+        if (Array.isArray(data.cues)) {
+          data.cues.sort((a: ExerciseCue, b: ExerciseCue) => a.timestamp - b.timestamp);
+        }
         setVideo(data);
-      } catch {
+      } catch (err) {
+        console.error("Failed to load video:", err);
         setError("Failed to load video");
       } finally {
         setIsLoading(false);
@@ -109,6 +132,7 @@ export default function VideoPlayerPage({
   const handleLogWorkout = async () => {
     if (!video || isLogging) return;
     setIsLogging(true);
+    setLogError(null);
     try {
       const duration = workoutStartTime
         ? Math.floor((Date.now() - workoutStartTime) / 1000)
@@ -125,10 +149,14 @@ export default function VideoPlayerPage({
 
       if (res.ok) {
         setLogSuccess(true);
-        setTimeout(() => setLogSuccess(false), 3000);
+        if (logTimeoutRef.current) clearTimeout(logTimeoutRef.current);
+        logTimeoutRef.current = setTimeout(() => setLogSuccess(false), 3000);
+      } else {
+        setLogError("Failed to log workout. Please try again.");
       }
     } catch (err) {
       console.error("Failed to log workout:", err);
+      setLogError("Network error. Check your connection and try again.");
     } finally {
       setIsLogging(false);
     }
@@ -176,6 +204,7 @@ export default function VideoPlayerPage({
             onReady={player.handlers.onReady}
             onStateChange={handleStateChange}
             onTimeUpdate={handleTimeUpdate}
+            onPlayerRef={player.registerPlayer}
             className="w-full overflow-hidden rounded-xl"
           />
 
@@ -223,15 +252,7 @@ export default function VideoPlayerPage({
             {/* Playback state indicator */}
             <div className="mt-4 flex items-center justify-center gap-2">
               <span
-                className={`inline-block h-2 w-2 rounded-full ${
-                  player.state === "playing"
-                    ? "bg-green-500"
-                    : player.state === "paused"
-                      ? "bg-yellow-500"
-                      : player.state === "ended"
-                        ? "bg-red-500"
-                        : "bg-zinc-500"
-                }`}
+                className={`inline-block h-2 w-2 rounded-full ${stateColor(player.state)}`}
               />
               <span className="text-sm capitalize text-zinc-400">
                 {player.state}
@@ -278,20 +299,14 @@ export default function VideoPlayerPage({
                 : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
             }`}
           >
-            {logSuccess ? (
-              <>
-                <CheckIcon className="h-5 w-5" />
-                Workout Logged!
-              </>
-            ) : isLogging ? (
-              "Logging..."
-            ) : (
-              <>
-                <ClipboardIcon className="h-5 w-5" />
-                Log Workout
-              </>
-            )}
+            <LogWorkoutButtonContent
+              logSuccess={logSuccess}
+              isLogging={isLogging}
+            />
           </button>
+          {logError && (
+            <p className="text-center text-sm text-red-400">{logError}</p>
+          )}
 
           {/* Exercise Cues List */}
           {video.cues.length > 0 && (
@@ -304,7 +319,7 @@ export default function VideoPlayerPage({
                   <button
                     key={cue.id}
                     onClick={() => player.seekTo(cue.timestamp)}
-                    className={`flex min-h-[40px] w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
+                    className={`flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
                       activeCue?.id === cue.id
                         ? "bg-green-600/20 text-green-400"
                         : "text-zinc-300 hover:bg-zinc-800"
@@ -371,7 +386,7 @@ function ExerciseCueOverlay({
       {nextCue && (
         <button
           onClick={() => onSeek(nextCue.timestamp)}
-          className="mt-3 flex w-full items-center gap-3 rounded-lg bg-zinc-800 px-3 py-2 text-left transition-colors hover:bg-zinc-700"
+          className="mt-3 flex min-h-[44px] w-full items-center gap-3 rounded-lg bg-zinc-800 px-3 py-2 text-left transition-colors hover:bg-zinc-700"
         >
           <span className="text-xs text-zinc-500">Next:</span>
           <span className="text-sm text-zinc-300">
@@ -383,6 +398,35 @@ function ExerciseCueOverlay({
         </button>
       )}
     </div>
+  );
+}
+
+// Log workout button content - extracted to avoid nested ternary
+function LogWorkoutButtonContent({
+  logSuccess,
+  isLogging,
+}: {
+  logSuccess: boolean;
+  isLogging: boolean;
+}) {
+  if (logSuccess) {
+    return (
+      <>
+        <CheckIcon className="h-5 w-5" />
+        Workout Logged!
+      </>
+    );
+  }
+
+  if (isLogging) {
+    return <>Logging...</>;
+  }
+
+  return (
+    <>
+      <ClipboardIcon className="h-5 w-5" />
+      Log Workout
+    </>
   );
 }
 

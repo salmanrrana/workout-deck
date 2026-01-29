@@ -61,6 +61,7 @@ interface YouTubePlayerProps {
   onStateChange?: (state: PlayerState) => void;
   onTimeUpdate?: (currentTime: number) => void;
   onError?: (errorCode: number) => void;
+  onPlayerRef?: (player: YTPlayer) => void;
   autoplay?: boolean;
   className?: string;
 }
@@ -125,6 +126,7 @@ export function YouTubePlayer({
   onStateChange,
   onTimeUpdate,
   onError,
+  onPlayerRef,
   autoplay = false,
   className = "",
 }: YouTubePlayerProps) {
@@ -139,13 +141,15 @@ export function YouTubePlayer({
   const onStateChangeRef = useRef(onStateChange);
   const onTimeUpdateRef = useRef(onTimeUpdate);
   const onErrorRef = useRef(onError);
+  const onPlayerRefRef = useRef(onPlayerRef);
 
   useEffect(() => {
     onReadyRef.current = onReady;
     onStateChangeRef.current = onStateChange;
     onTimeUpdateRef.current = onTimeUpdate;
     onErrorRef.current = onError;
-  }, [onReady, onStateChange, onTimeUpdate, onError]);
+    onPlayerRefRef.current = onPlayerRef;
+  }, [onReady, onStateChange, onTimeUpdate, onError, onPlayerRef]);
 
   // Start/stop time updates based on player state
   const startTimeUpdates = useCallback(() => {
@@ -189,9 +193,10 @@ export function YouTubePlayer({
           playsinline: 1,
         },
         events: {
-          onReady: () => {
+          onReady: (event) => {
             if (!mounted) return;
             setIsReady(true);
+            onPlayerRefRef.current?.(event.target);
             onReadyRef.current?.();
           },
           onStateChange: (event) => {

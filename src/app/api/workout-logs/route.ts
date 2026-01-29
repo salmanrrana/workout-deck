@@ -3,16 +3,43 @@ import { prisma } from "@/lib/db";
 
 // POST /api/workout-logs - Log a completed workout
 export async function POST(request: NextRequest) {
+  let body;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON in request body" },
+      { status: 400 }
+    );
+  }
+
+  try {
     const { videoId, timerPresetId, duration, notes } = body;
+
+    if (!videoId && !timerPresetId) {
+      return NextResponse.json(
+        { error: "Either videoId or timerPresetId is required" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      duration !== undefined &&
+      duration !== null &&
+      (typeof duration !== "number" || duration < 0)
+    ) {
+      return NextResponse.json(
+        { error: "Duration must be a non-negative number" },
+        { status: 400 }
+      );
+    }
 
     const log = await prisma.workoutLog.create({
       data: {
-        videoId: videoId || null,
-        timerPresetId: timerPresetId || null,
-        duration: duration || null,
-        notes: notes || null,
+        videoId: videoId ?? null,
+        timerPresetId: timerPresetId ?? null,
+        duration: duration ?? null,
+        notes: notes ?? null,
       },
     });
 
