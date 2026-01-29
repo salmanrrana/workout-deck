@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db";
 import { fetchTranscript } from "@/lib/youtube-transcript";
+import { formatTime } from "@/lib/types";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -76,10 +77,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Format transcript for Claude
     const transcriptText = transcript.segments
-      .map(
-        (s) =>
-          `[${formatTimestamp(s.startSeconds)}] ${s.text}`
-      )
+      .map((s) => `[${formatTime(s.startSeconds)}] ${s.text}`)
       .join("\n");
 
     // Call Claude API
@@ -97,8 +95,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     // Parse response
-    const responseText =
-      message.content[0].type === "text" ? message.content[0].text : "";
+    const firstBlock = message.content[0];
+    if (!firstBlock || firstBlock.type !== "text") {
+      console.error(
+        `Unexpected Claude response format for video ${id}:`,
+        message.content
+      );
+      return NextResponse.json(
+        { error: "Unexpected AI response format" },
+        { status: 502 }
+      );
+    }
+    const responseText = firstBlock.text;
 
     let extractedCues: ExtractedCue[];
     try {
@@ -136,26 +144,30 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         order: index + 1,
       }));
 
-    // If save=true, persist to database
-    if (body.save) {
-      // Delete existing cues for this video
-      await prisma.exerciseCue.deleteMany({
-        where: { videoId: video.id },
-      });
+    const filteredCount = extractedCues.length - validCues.length;
+    if (filteredCount > 0) {
+      console.warn(
+        `Filtered out ${filteredCount} invalid cue(s) for video ${id}`
+      );
+    }
 
-      // Create new cues
-      await prisma.$transaction(
-        validCues.map((cue) =>
-          prisma.exerciseCue.create({
+    // If save=true, persist to database atomically
+    if (body.save) {
+      await prisma.$transaction(async (tx) => {
+        await tx.exerciseCue.deleteMany({
+          where: { videoId: video.id },
+        });
+        for (const cue of validCues) {
+          await tx.exerciseCue.create({
             data: {
               videoId: video.id,
               timestamp: cue.timestamp,
               exerciseName: cue.exerciseName,
               order: cue.order,
             },
-          })
-        )
-      );
+          });
+        }
+      });
     }
 
     return NextResponse.json({
@@ -194,10 +206,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     );
   }
-}
-
-function formatTimestamp(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
