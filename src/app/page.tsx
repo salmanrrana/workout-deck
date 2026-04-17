@@ -33,10 +33,10 @@ export default function Home() {
 
         <Link
           href="/history"
-          className="flex min-h-[80px] flex-col items-center justify-center rounded-xl bg-zinc-700 p-6 text-center font-medium text-white transition-colors hover:bg-zinc-600 sm:min-h-[120px]"
+          className="flex min-h-[80px] flex-col items-center justify-center rounded-xl bg-yellow-500 p-6 text-center font-medium text-black transition-colors hover:bg-yellow-400 sm:min-h-[120px]"
         >
           <span className="text-2xl sm:text-3xl">History</span>
-          <span className="mt-1 text-sm text-zinc-300 sm:text-base">Track progress</span>
+          <span className="mt-1 text-sm text-yellow-950 sm:text-base">Track progress</span>
         </Link>
       </div>
     </div>
