@@ -1,0 +1,372 @@
+# WorkoutDeck Progress Log
+
+## Project Created
+Date: 2026-01-09
+Created via Brain Dumpy Project Inception
+
+## Spec Breakdown Complete
+Date: 2026-01-09
+
+Created 5 epics and 24 tickets in Brain Dumpy:
+
+### Epics:
+1. Project Setup & Infrastructure (4 tickets)
+2. YouTube Video Library (5 tickets)
+3. Interval Timer (6 tickets)
+4. Exercise Cue Overlay (5 tickets)
+5. Workout Tracking (4 tickets)
+
+### Recommended Build Order:
+1. Start with Project Setup (Next.js, Prisma, layout)
+2. Build Video Library core (CRUD, player)
+3. Build Timer core logic and display
+4. Integrate timer with video player page
+5. Add exercise cue overlay
+6. Add workout tracking
+7. Polish with dashboard and presets
+
+Next step: Start development with "Initialize Next.js project with App Router"
+
+## Ticket: Initialize Next.js project with App Router
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Initialized Next.js 16.1.1 with App Router, TypeScript, and Tailwind CSS v4
+- Configured pnpm as package manager
+- Set up dark theme as default (for workout visibility)
+- Created basic home page with WorkoutDeck branding
+- Added navigation buttons for Videos and Timer sections
+- Added type-check script to package.json
+
+### Files Created:
+- package.json - Project configuration with dependencies
+- tsconfig.json - TypeScript configuration
+- next.config.ts - Next.js configuration
+- tailwind/postcss configs - Tailwind CSS v4 configuration
+- src/app/layout.tsx - Root layout with dark theme
+- src/app/page.tsx - Home page with branding
+- src/app/globals.css - Global styles with dark theme defaults
+- eslint.config.mjs - ESLint configuration
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- Dev server runs successfully (pnpm dev)
+- Note: Production build has a known Next.js 16 issue with global-error page
+
+Next step: Set up Prisma with SQLite database
+
+## Ticket: Set up Prisma with SQLite database
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Installed Prisma 7.2.0 with SQLite provider
+- Installed @prisma/adapter-better-sqlite3 for driver adapter support
+- Created database schema with all required models:
+  - Video (id, youtubeId, title, tags, notes, timestamps)
+  - ExerciseCue (id, videoId, timestamp, exerciseName, order)
+  - TimerPreset (id, name, intervals, timestamps)
+  - WorkoutLog (id, videoId, timerPresetId, completedAt, duration, notes)
+- Set up proper relations and indexes
+- Created initial migration
+- Created database utility file for Next.js singleton pattern
+- Created TypeScript types for JSON fields (IntervalConfig, helper functions)
+
+### Files Created:
+- prisma/schema.prisma - Database schema
+- prisma/migrations/20260109213128_init/ - Initial migration
+- prisma.config.ts - Prisma configuration
+- src/lib/db.ts - Database client singleton
+- src/lib/types.ts - TypeScript types for JSON fields
+- .env - Database URL configuration (gitignored)
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- Migration applied successfully
+- Prisma client generated
+
+### Notes:
+- Prisma 7 requires explicit driver adapters (using @prisma/adapter-better-sqlite3)
+- Tags and intervals stored as JSON strings in SQLite (no native array support)
+- Helper functions in types.ts for parsing/stringifying JSON fields
+
+Next step: Create base layout and navigation
+
+## Ticket: Create base layout and navigation
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created Navigation component with sticky header
+- Added links to Home, Videos, Timer, and History sections
+- Implemented active state highlighting for current route
+- Optimized for iPad landscape with large touch targets (min 44x44px)
+- Updated root layout to include navigation
+- Added viewport meta for mobile optimization (no user scaling)
+- Created placeholder pages for Videos, Timer, and History routes
+- Updated home page with large, touch-friendly action cards
+
+### Files Created/Modified:
+- src/components/Navigation.tsx - Navigation header component
+- src/app/layout.tsx - Updated with Navigation and viewport config
+- src/app/page.tsx - Updated home page with action cards
+- src/app/videos/page.tsx - Placeholder videos page
+- src/app/timer/page.tsx - Placeholder timer page
+- src/app/history/page.tsx - Placeholder history page
+
+### UI Features:
+- Dark theme throughout (zinc-950 background)
+- High contrast text (white on dark)
+- Large touch targets for iPad use
+- Responsive design (mobile to desktop)
+- Color-coded sections (green=videos, blue=timer, gray=history)
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- Navigation works between all sections
+
+Next step: Set up Web Audio API for timer beeps
+
+## Ticket: Set up Web Audio API for timer beeps
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created audio service using Web Audio API for reliable timer beeps
+- Implemented iOS Safari audio context handling (requires user interaction)
+- Created distinct synthesized sounds for different timer events:
+  - intervalStart: Single high-pitched beep (880Hz)
+  - intervalEnd: Double beep (660Hz)
+  - warning: Quick triple beep (440Hz, square wave)
+  - workoutComplete: Ascending celebration tones (C5-E5-G5-C6)
+- Added volume control support
+- Created React hook (useAudio) for easy component integration
+- Created AudioEnabler component for iOS Safari audio initialization
+
+### Files Created:
+- src/lib/audio.ts - Web Audio API service with sound synthesis
+- src/hooks/useAudio.ts - React hook for audio functionality
+- src/components/AudioEnabler.tsx - Button component for enabling audio
+
+### Sound Design:
+- Uses oscillator-based synthesis (no external audio files needed)
+- Exponential fade-out to prevent audio clicks
+- Different wave types for variety (sine, square)
+- Timing and frequency designed for clarity during workouts
+
+### iOS Safari Support:
+- AudioContext created on first user interaction
+- Resume handling for suspended contexts
+- AudioEnabler component provides visible "Tap to Enable Audio" button
+- Test sound plays on successful enable
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+- testAllSounds() function available for testing
+
+## Epic Complete: Project Setup & Infrastructure
+All 4 tickets in this epic are now complete:
+1. Initialize Next.js project with App Router - DONE
+2. Set up Prisma with SQLite database - DONE
+3. Create base layout and navigation - DONE
+4. Set up Web Audio API for timer beeps - DONE
+
+Next epic: YouTube Video Library
+
+## Epic: YouTube Video Library
+Started: 2026-01-09
+
+## Ticket: Create video CRUD API routes
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created GET /api/videos - List all videos with optional tag and search filters
+- Created POST /api/videos - Create new video with validation
+- Created GET /api/videos/[id] - Get single video with exercise cues
+- Created PUT /api/videos/[id] - Update video fields
+- Created DELETE /api/videos/[id] - Delete video
+- All routes include proper error handling and status codes
+- Tags are parsed/stringified for API consumers (array format)
+
+### Files Created:
+- src/app/api/videos/route.ts - List and create video endpoints
+- src/app/api/videos/[id]/route.ts - Get, update, delete single video
+
+### API Features:
+- Filter videos by tag: GET /api/videos?tag=yoga
+- Search videos by title: GET /api/videos?search=morning
+- Duplicate youtubeId detection (returns 409 Conflict)
+- Videos include parsed tags array in responses
+- Single video includes related exercise cues
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+Next step: Build video library page with tag filtering
+
+## Ticket: Build video library page with tag filtering
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created VideoCard component with YouTube thumbnail, tags, and action buttons
+- Built video library page with responsive grid layout (1-4 columns)
+- Added tag filtering with clickable tag pills
+- Added search by title with 300ms debounce
+- Added quick actions: Play, Edit, Delete (with confirmation dialog)
+- Configured Next.js image optimization for YouTube thumbnails
+- Large touch targets (min 44px) for iPad usability
+
+### Files Created/Modified:
+- src/components/VideoCard.tsx - Reusable video card component
+- src/app/videos/page.tsx - Full video library page
+- next.config.ts - Added YouTube image domains
+
+### UI Features:
+- Responsive grid: 1 col mobile, 2 col tablet, 3-4 col desktop
+- YouTube thumbnail with play overlay on hover
+- Tag pills with active state highlighting
+- Search bar with icon
+- Loading spinner state
+- Empty state with call to action
+- Delete confirmation flow
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+Next step: Create add video form
+
+## Ticket: Create add video form
+Date: 2026-01-09
+Status: COMPLETE
+
+### Changes Made:
+- Created YouTube URL parser supporting multiple URL formats (watch, youtu.be, embed)
+- Added API route to fetch video info via oEmbed (no API key required)
+- Built /videos/new page with full add video form
+- YouTube URL validation with live thumbnail preview
+- Auto-fetch video title from YouTube
+- Tag selector with suggestions from existing tags
+- Notes field for additional video information
+- Large touch targets (min 44px) for iPad usability
+
+### Files Created:
+- src/lib/youtube.ts - YouTube URL parsing and oEmbed utilities
+- src/app/api/youtube/info/route.ts - API route for video info
+- src/app/videos/new/page.tsx - Add video form page
+
+### Form Features:
+- Debounced URL input with live preview
+- Auto-populated title from YouTube
+- Tag input with keyboard navigation (Enter/comma to add, Backspace to remove)
+- Tag suggestions from existing video tags
+- Error handling and validation
+- Loading states during submission
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+Next step: Integrate YouTube IFrame API for video playback
+
+## Ticket: Integrate YouTube IFrame API for video playback
+Date: 2026-01-29
+Status: COMPLETE (previously committed dc25f88)
+
+### Changes Made:
+- Created YouTubePlayer component with full IFrame API integration
+- Singleton API loading pattern with callback queue
+- Player state management (unstarted, playing, paused, buffering, ended, cued)
+- Time update polling at 100ms intervals while playing
+- Created useYouTubePlayer hook for parent component control
+- Full TypeScript type declarations for YT.Player interface
+- Proper cleanup on unmount (destroy player, clear intervals)
+- Added onPlayerRef callback for registering player instance with external hooks
+
+### Files Created:
+- src/components/YouTubePlayer.tsx - YouTube IFrame API component and hook
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+## Ticket: Build video player page with workout UI
+Date: 2026-01-29
+Status: COMPLETE
+
+### Changes Made:
+- Created /videos/[id] page with full workout UI
+- Large YouTube player with play/pause/restart controls
+- Timer display panel showing elapsed time and playback state
+- Exercise cue overlay synced with video playback time
+- Active cue display with order number and exercise name
+- Next cue preview with seek-to button
+- Clickable cue list in sidebar for seeking to timestamps
+- Log workout button with POST to /api/workout-logs
+- Created workout-logs API route with input validation
+- Responsive layout: player + info on left, controls + cues on right
+
+### Files Created:
+- src/app/videos/[id]/page.tsx - Video player page with workout UI
+- src/app/api/workout-logs/route.ts - Workout logging API
+
+### Review Fixes Applied:
+- Fixed YouTubePlayer hook registration (onPlayerRef callback)
+- Added error feedback for workout log failures
+- Added input validation to workout-logs API
+- Used ?? instead of || for nullish coalescing
+- Defensive sort on exercise cues by timestamp
+- Fixed touch targets to 44px minimum
+- Added setTimeout cleanup on unmount
+- Added error logging in catch blocks
+
+### Verification:
+- Type checking passes (pnpm type-check)
+- Linting passes (pnpm lint)
+
+Next step: Epic complete - all YouTube Video Library tickets done
+[2026-07-08T02:12:09-05:00] STALLED: No new ticket completed for 3 iterations. 2/5 incomplete. Likely a repeating blocker; needs human attention.
+[2026-07-22T19:41:06-05:00] REVIEW FAILURE: Claude exited with code 1 on iteration 3
+[2026-07-22T19:41:06-05:00] FAILURE: Iteration 3 failed after 3 retries (exit code: 1)
+[2026-07-22T19:41:41-05:00] REVIEW FAILURE: Claude exited with code 1 on iteration 4
+[2026-07-22T19:41:41-05:00] FAILURE: Iteration 4 failed after 3 retries (exit code: 1)
+[2026-07-22T19:42:23-05:00] REVIEW FAILURE: Claude exited with code 1 on iteration 5
+[2026-07-22T19:42:24-05:00] FAILURE: Iteration 5 failed after 3 retries (exit code: 1)
+[2026-07-22T19:42:56-05:00] REVIEW FAILURE: Claude exited with code 1 on iteration 6
+[2026-07-22T19:42:56-05:00] FAILURE: Iteration 6 failed after 3 retries (exit code: 1)
+[2026-07-22T19:43:32-05:00] REVIEW FAILURE: Claude exited with code 1 on iteration 7
+[2026-07-22T19:43:32-05:00] FAILURE: Iteration 7 failed after 3 retries (exit code: 1)
+[2026-07-22T19:43:32-05:00] ABORTED: 5 consecutive failures
+
+## Ralph iteration — 2026-07-22T19:52
+Selected F2 (2a00fa2e-454f-4f23-b19c-00532fe30184): status=ai_review, open findings=none.
+Per Fresh Eyes Review Split: no open critical/major findings → leave for Pi reviewer (demo/verification handoff). STOP.
+F3 remains in_progress for a later implementer iteration after F2 clears review.
+
+## Ralph iteration — 2026-07-22T19:58
+Selected F2 (2a00fa2e-454f-4f23-b19c-00532fe30184): status=ai_review.
+Open findings: 1 major (Chip nested interactives) + 2 minors (Chip aria-pressed, Spinner status).
+Fixed all three in commit 426705c3; marked fixed; validation PASS (type-check/lint/test/build).
+Per Fresh Eyes Review Split: STOP for Pi re-review. Did not run check-complete or generate-demo.
+
+## Ralph iteration — 2026-07-22T20:03
+Selected F2 (2a00fa2e-454f-4f23-b19c-00532fe30184): status=ai_review.
+Open findings: 1 major (interactive Card mouse-only / weak polymorphic typing) + 1 minor (reduced-motion on press/lift).
+Fixed both in commit 59a71bd5; marked fixed; validation PASS (type-check/lint/test/build).
+Per Fresh Eyes Review Split: STOP for Pi re-review. Did not run check-complete or generate-demo.
+
+## Ralph iteration — 2026-07-22T20:11
+Selected F2 (2a00fa2e-454f-4f23-b19c-00532fe30184): status=ai_review.
+Open findings: 1 major (Card onClick without interactive / interactive without onClick) + 1 minor (unconditional transition + no reduced-motion pressed cue).
+Fixed both in commit 65d4f615; marked fixed; validation PASS (type-check/lint/test/build).
+Per Fresh Eyes Review Split: STOP for Pi re-review. Did not run check-complete or generate-demo.
+[2026-07-22T20:16:31-05:00] STALLED: No new ticket completed for 3 iterations. 10/10 incomplete. Likely a repeating blocker; needs human attention.
+[2026-07-22T21:42:24-05:00] STALLED: No new ticket completed for 3 iterations. 10/10 incomplete. Likely a repeating blocker; needs human attention.

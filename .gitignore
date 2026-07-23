@@ -48,9 +48,7 @@ next-env.d.ts
 *.db
 *.db-journal
 
-# Brain Dump Ralph artifacts
-plans/prd.json
-plans/progress.txt
+# Brain Dump Ralph runtime artifacts
 plans/archives/
 plans/review-runs/
 plans/ralph*.sh
