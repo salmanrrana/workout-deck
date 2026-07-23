@@ -2,6 +2,11 @@
   "name": "workout-deck",
   "version": "0.1.0",
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
+  },
   "scripts": {
     "dev": "NODE_ENV=development next dev",
     "dev:verify": "NODE_ENV=development NEXT_DIST_DIR=.next-verify next dev",
