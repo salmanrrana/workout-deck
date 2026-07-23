@@ -69,6 +69,76 @@ describe("VideoForm", () => {
     expect(screen.queryByRole("button", { name: "Remove recovery tag" })).toBeNull();
   });
 
+  it("invalidates a ready preview as soon as its URL changes", async () => {
+    vi.useFakeTimers();
+    const pendingPreview = new Promise<Response>(() => {});
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const requestUrl = String(input);
+      if (requestUrl === "/api/videos" && !init) return Promise.resolve(jsonResponse([]));
+      if (requestUrl.includes("abc123def45")) {
+        return Promise.resolve(jsonResponse({
+          id: "abc123def45",
+          title: "Original workout",
+          thumbnail: null,
+        }));
+      }
+      if (requestUrl.includes("zyx987wvu65")) return pendingPreview;
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    });
+
+    render(<VideoForm mode="create" />);
+    const urlInput = screen.getByLabelText(/YouTube URL/);
+    const submit = screen.getByRole("button", { name: "Add to deck" });
+
+    fireEvent.change(urlInput, { target: { value: "https://youtube.com/watch?v=abc123def45" } });
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(submit.hasAttribute("disabled")).toBe(false);
+
+    fireEvent.change(urlInput, { target: { value: "https://youtube.com/watch?v=zyx987wvu65" } });
+    expect(submit.hasAttribute("disabled")).toBe(true);
+    fireEvent.submit(submit.closest("form")!);
+
+    expect(screen.getByRole("alert").textContent).toContain("Enter a valid YouTube link");
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+  });
+
+  it("keeps a saved custom title when edit preview metadata loads", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const requestUrl = String(input);
+      if (requestUrl === "/api/videos") return Promise.resolve(jsonResponse([]));
+      if (requestUrl === "/api/videos/video-1") {
+        return Promise.resolve(jsonResponse({
+          id: "video-1",
+          youtubeId: "abc123def45",
+          provider: "youtube",
+          title: "My custom workout title",
+          tags: [],
+          notes: null,
+        }));
+      }
+      if (requestUrl.startsWith("/api/youtube/info")) {
+        return Promise.resolve(jsonResponse({
+          id: "abc123def45",
+          title: "Remote provider title",
+          thumbnail: null,
+        }));
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    });
+
+    render(<VideoForm mode="edit" videoId="video-1" />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    expect(fetchMock.mock.calls.some(([url]) => String(url).startsWith("/api/youtube/info"))).toBe(true);
+    expect((screen.getByLabelText(/Title/) as HTMLInputElement).value).toBe("My custom workout title");
+  });
+
   it("loads an existing card and saves changes through the edit route", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       const url = String(input);

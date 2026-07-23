@@ -53,6 +53,10 @@ function canonicalProviderUrl(provider: VideoProvider, id: string) {
   return provider === "youtube" ? getYouTubeUrl(id) : getVimeoUrl(id);
 }
 
+function videoSourceKey(provider: VideoProvider, value: string) {
+  return `${provider}:${value.trim()}`;
+}
+
 function fallbackInfo(provider: VideoProvider, id: string): VideoInfo {
   return {
     id,
@@ -66,6 +70,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
   const [provider, setProvider] = useState<VideoProvider>("youtube");
   const [url, setUrl] = useState("");
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
+  const [previewSourceKey, setPreviewSourceKey] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -76,6 +81,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const previewRequestRef = useRef(0);
+  const titleEditedRef = useRef(mode === "edit");
 
   useEffect(() => {
     let cancelled = false;
@@ -111,11 +117,13 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
 
         const storedProvider: VideoProvider = video.provider === "vimeo" ? "vimeo" : "youtube";
         setProvider(storedProvider);
-        setUrl(canonicalProviderUrl(storedProvider, video.youtubeId));
+        const storedUrl = canonicalProviderUrl(storedProvider, video.youtubeId);
+        setUrl(storedUrl);
         setVideoInfo({
           ...fallbackInfo(storedProvider, video.youtubeId),
           title: video.title,
         });
+        setPreviewSourceKey(videoSourceKey(storedProvider, storedUrl));
         setTitle(video.title);
         setTags(Array.isArray(video.tags) ? video.tags : []);
         setNotes(video.notes ?? "");
@@ -140,6 +148,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
 
     if (!providerId) {
       setVideoInfo(null);
+      setPreviewSourceKey(null);
       setIsFetching(false);
       return;
     }
@@ -157,10 +166,12 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
 
       if (requestId !== previewRequestRef.current) return;
       setVideoInfo(info);
-      if (info.title) setTitle(info.title);
+      setPreviewSourceKey(videoSourceKey(selectedProvider, inputUrl));
+      if (info.title && !titleEditedRef.current) setTitle(info.title);
     } catch {
       if (requestId !== previewRequestRef.current) return;
       setVideoInfo(fallbackInfo(selectedProvider, providerId));
+      setPreviewSourceKey(videoSourceKey(selectedProvider, inputUrl));
     } finally {
       if (requestId === previewRequestRef.current) setIsFetching(false);
     }
@@ -170,6 +181,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
     if (!url) {
       previewRequestRef.current += 1;
       setVideoInfo(null);
+      setPreviewSourceKey(null);
       setIsFetching(false);
       return;
     }
@@ -202,17 +214,30 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
     }
   };
 
+  const changeUrl = (nextUrl: string) => {
+    previewRequestRef.current += 1;
+    setUrl(nextUrl);
+    setVideoInfo(null);
+    setPreviewSourceKey(null);
+    setIsFetching(Boolean(extractProviderId(provider, nextUrl)));
+    setError(null);
+  };
+
   const changeProvider = (nextProvider: VideoProvider) => {
     if (nextProvider === provider) return;
     previewRequestRef.current += 1;
     setProvider(nextProvider);
     setUrl("");
     setVideoInfo(null);
+    setPreviewSourceKey(null);
     setIsFetching(false);
     setError(null);
   };
 
-  const canSubmit = Boolean(videoInfo?.id && title.trim()) && !isSaving && !isHydrating;
+  const hasCurrentVideo = Boolean(
+    videoInfo?.id && previewSourceKey === videoSourceKey(provider, url),
+  );
+  const canSubmit = hasCurrentVideo && Boolean(title.trim()) && !isSaving && !isHydrating;
   const disabledReason = !videoInfo?.id
     ? `Enter a valid ${providerLabels[provider]} link to continue.`
     : !title.trim()
@@ -229,7 +254,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!videoInfo?.id) {
+    if (!videoInfo?.id || previewSourceKey !== videoSourceKey(provider, url)) {
       setError(`Enter a valid ${providerLabels[provider]} link.`);
       return;
     }
@@ -334,7 +359,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
                 inputMode="url"
                 label={`${providerLabels[provider]} URL`}
                 value={url}
-                onChange={(event) => setUrl(event.target.value)}
+                onChange={(event) => changeUrl(event.target.value)}
                 placeholder={provider === "youtube" ? "https://youtube.com/watch?v=…" : "https://vimeo.com/…"}
                 hint={`Paste the public ${providerLabels[provider]} link for this workout.`}
                 required
@@ -344,7 +369,10 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
                 id="video-title"
                 label="Title"
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) => {
+                  titleEditedRef.current = true;
+                  setTitle(event.target.value);
+                }}
                 placeholder="e.g. 30-minute full body strength"
                 required
               />
