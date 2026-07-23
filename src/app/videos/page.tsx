@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { VideoCard } from "@/components/VideoCard";
 import { Button, Chip, EmptyState, Input, Spinner } from "@/components/ui";
@@ -22,32 +22,7 @@ export default function VideosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [isLoading, setIsLoading] = useState(true);
-
-  const fetchVideos = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (selectedTag) params.set("tag", selectedTag);
-      if (debouncedSearch) params.set("search", debouncedSearch);
-
-      const res = await fetch(`/api/videos?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setVideos(data);
-
-        // Extract all unique tags from videos
-        const tags = new Set<string>();
-        data.forEach((video: Video) => {
-          video.tags.forEach((tag) => tags.add(tag));
-        });
-        setAllTags(Array.from(tags).sort());
-      }
-    } catch (error) {
-      console.error("Failed to fetch videos:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedTag, debouncedSearch]);
+  const latestRequestId = useRef(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,11 +32,57 @@ export default function VideosPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    fetchVideos();
-  }, [fetchVideos]);
+    const controller = new AbortController();
+    const requestId = ++latestRequestId.current;
+
+    const fetchVideos = async () => {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (selectedTag) params.set("tag", selectedTag);
+        if (debouncedSearch) params.set("search", debouncedSearch);
+
+        const res = await fetch(`/api/videos?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok || requestId !== latestRequestId.current) return;
+
+        const data: Video[] = await res.json();
+        if (requestId !== latestRequestId.current) return;
+
+        setVideos(data);
+
+        // Extract all unique tags from videos
+        const tags = new Set<string>();
+        data.forEach((video) => {
+          video.tags.forEach((tag) => tags.add(tag));
+        });
+        setAllTags(Array.from(tags).sort());
+      } catch (error) {
+        if (
+          requestId === latestRequestId.current &&
+          !(error instanceof DOMException && error.name === "AbortError")
+        ) {
+          console.error("Failed to fetch videos:", error);
+        }
+      } finally {
+        if (requestId === latestRequestId.current) setIsLoading(false);
+      }
+    };
+
+    void fetchVideos();
+    return () => controller.abort();
+  }, [selectedTag, debouncedSearch]);
 
   const handleDelete = (id: string) => {
     setVideos((prev) => prev.filter((v) => v.id !== id));
+  };
+
+  const selectTag = (tag: string | null) => {
+    // Tag filters apply immediately, so include the latest typed search rather
+    // than the previous debounced value in the request they trigger.
+    setDebouncedSearch(searchQuery);
+    setSelectedTag(tag);
   };
 
   const clearFilters = () => {
@@ -106,7 +127,7 @@ export default function VideosPage() {
             <Chip
               variant={selectedTag === null ? "selected" : "neutral"}
               pressed={selectedTag === null}
-              onClick={() => setSelectedTag(null)}
+              onClick={() => selectTag(null)}
             >
               All
             </Chip>
@@ -114,7 +135,7 @@ export default function VideosPage() {
               <Chip
                 key={tag}
                 pressed={selectedTag === tag}
-                onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                onClick={() => selectTag(tag === selectedTag ? null : tag)}
                 variant={selectedTag === tag ? "selected" : "neutral"}
               >
                 {tag}
