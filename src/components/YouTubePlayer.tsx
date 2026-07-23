@@ -65,7 +65,7 @@ interface YouTubePlayerProps {
   onStateChange?: (state: PlayerState) => void;
   onTimeUpdate?: (currentTime: number) => void;
   onError?: (errorCode: number) => void;
-  onPlayerRef?: (player: VideoPlayerHandle) => void;
+  onPlayerRef?: (player: VideoPlayerHandle | null) => void;
   autoplay?: boolean;
   className?: string;
 }
@@ -228,6 +228,7 @@ export function YouTubePlayer({
     return () => {
       mounted = false;
       stopTimeUpdates();
+      onPlayerRefRef.current?.(null);
       if (playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
@@ -255,8 +256,14 @@ export function useYouTubePlayer() {
   const [state, setState] = useState<PlayerState>("unstarted");
   const [isReady, setIsReady] = useState(false);
 
-  const registerPlayer = useCallback((player: VideoPlayerHandle) => {
+  const registerPlayer = useCallback((player: VideoPlayerHandle | null) => {
     playerRef.current = player;
+    if (!player) {
+      setCurrentTime(0);
+      setDuration(0);
+      setState("unstarted");
+      setIsReady(false);
+    }
   }, []);
 
   const play = useCallback(() => {

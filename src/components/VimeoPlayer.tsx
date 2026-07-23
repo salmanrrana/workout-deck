@@ -11,7 +11,8 @@ type VimeoEvent =
   | "ended"
   | "bufferstart"
   | "bufferend"
-  | "timeupdate";
+  | "timeupdate"
+  | "error";
 
 interface VimeoApiPlayer {
   play: () => Promise<void>;
@@ -64,7 +65,7 @@ interface VimeoPlayerProps {
   onStateChange?: (state: PlayerState) => void;
   onTimeUpdate?: (currentTime: number) => void;
   onError?: () => void;
-  onPlayerRef?: (player: VideoPlayerHandle) => void;
+  onPlayerRef?: (player: VideoPlayerHandle | null) => void;
   autoplay?: boolean;
   className?: string;
 }
@@ -80,7 +81,8 @@ export function VimeoPlayer({
   className = "",
 }: VimeoPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [readyVideoId, setReadyVideoId] = useState<string | null>(null);
+  const [failedVideoId, setFailedVideoId] = useState<string | null>(null);
   const onReadyRef = useRef(onReady);
   const onStateChangeRef = useRef(onStateChange);
   const onTimeUpdateRef = useRef(onTimeUpdate);
@@ -100,6 +102,15 @@ export function VimeoPlayer({
     let apiPlayer: VimeoApiPlayer | null = null;
     let currentTime = 0;
     let duration = 0;
+
+    const reportError = (error: unknown) => {
+      if (!mounted) return;
+      console.error("Vimeo player error:", error);
+      setReadyVideoId(null);
+      setFailedVideoId(videoId);
+      onPlayerRefRef.current?.(null);
+      onErrorRef.current?.();
+    };
 
     async function initialize() {
       try {
@@ -122,26 +133,47 @@ export function VimeoPlayer({
         };
 
         apiPlayer.on("loaded", async () => {
-          if (!mounted || !apiPlayer) return;
-          duration = await apiPlayer.getDuration();
-          currentTime = await apiPlayer.getCurrentTime();
-          onPlayerRefRef.current?.(handle);
-          setIsReady(true);
-          onReadyRef.current?.();
+          const loadedPlayer = apiPlayer;
+          if (!mounted || !loadedPlayer) return;
+
+          try {
+            [duration, currentTime] = await Promise.all([
+              loadedPlayer.getDuration(),
+              loadedPlayer.getCurrentTime(),
+            ]);
+            if (!mounted || apiPlayer !== loadedPlayer) return;
+            onPlayerRefRef.current?.(handle);
+            setFailedVideoId(null);
+            setReadyVideoId(videoId);
+            onReadyRef.current?.();
+          } catch (error) {
+            reportError(error);
+          }
         });
-        apiPlayer.on("play", () => onStateChangeRef.current?.("playing"));
-        apiPlayer.on("pause", () => onStateChangeRef.current?.("paused"));
-        apiPlayer.on("ended", () => onStateChangeRef.current?.("ended"));
-        apiPlayer.on("bufferstart", () => onStateChangeRef.current?.("buffering"));
-        apiPlayer.on("bufferend", () => onStateChangeRef.current?.("playing"));
+        apiPlayer.on("play", () => {
+          if (mounted) onStateChangeRef.current?.("playing");
+        });
+        apiPlayer.on("pause", () => {
+          if (mounted) onStateChangeRef.current?.("paused");
+        });
+        apiPlayer.on("ended", () => {
+          if (mounted) onStateChangeRef.current?.("ended");
+        });
+        apiPlayer.on("bufferstart", () => {
+          if (mounted) onStateChangeRef.current?.("buffering");
+        });
+        apiPlayer.on("bufferend", () => {
+          if (mounted) onStateChangeRef.current?.("playing");
+        });
         apiPlayer.on("timeupdate", (data) => {
+          if (!mounted) return;
           currentTime = data?.seconds ?? currentTime;
           duration = data?.duration ?? duration;
           onTimeUpdateRef.current?.(currentTime);
         });
+        apiPlayer.on("error", reportError);
       } catch (error) {
-        console.error("Failed to initialize Vimeo player:", error);
-        if (mounted) onErrorRef.current?.();
+        reportError(error);
       }
     }
 
@@ -149,6 +181,7 @@ export function VimeoPlayer({
 
     return () => {
       mounted = false;
+      onPlayerRefRef.current?.(null);
       if (apiPlayer) void apiPlayer.destroy();
     };
   }, [videoId]);
@@ -156,6 +189,7 @@ export function VimeoPlayer({
   return (
     <div className={`relative aspect-video ${className}`}>
       <iframe
+        key={videoId}
         ref={iframeRef}
         src={`https://player.vimeo.com/video/${encodeURIComponent(videoId)}?dnt=1&playsinline=1&autoplay=${autoplay ? 1 : 0}`}
         title="Vimeo video player"
@@ -163,7 +197,7 @@ export function VimeoPlayer({
         allowFullScreen
         className="absolute inset-0 h-full w-full border-0"
       />
-      {!isReady && (
+      {readyVideoId !== videoId && failedVideoId !== videoId && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-surface-1">
           <Spinner size="lg" label="Loading video player" />
         </div>
