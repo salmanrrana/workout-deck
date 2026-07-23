@@ -61,6 +61,14 @@ describe("UI primitives", () => {
     expect(card.getAttribute("tabindex")).toBe("0");
     fireEvent.keyDown(card, { key: "Enter" });
     expect(onClick).toHaveBeenCalledOnce();
+    fireEvent.keyDown(card, { key: " " });
+    expect(onClick).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps static cards free of button semantics", () => {
+    render(<Card>Glance tile</Card>);
+
+    expect(screen.queryByRole("button", { name: "Glance tile" })).toBeNull();
   });
 
   it("forwards native anchor props when Card renders as a link", () => {
@@ -73,5 +81,6 @@ describe("UI primitives", () => {
     const link = screen.getByRole("link", { name: "Videos" });
     expect(link.getAttribute("href")).toBe("/videos");
     expect(link.getAttribute("role")).toBeNull();
+    expect(link.getAttribute("tabindex")).toBeNull();
   });
 });

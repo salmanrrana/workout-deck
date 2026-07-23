@@ -34,9 +34,9 @@ export type ChipStaticProps = ChipShared & {
 export type ChipProps = ChipClickableProps | ChipRemovableProps | ChipStaticProps;
 
 const variantClasses: Record<ChipVariant, string> = {
-  neutral: "bg-surface-2 text-muted hover:bg-surface-3 hover:text-text",
-  accent: "bg-accent/15 text-accent hover:bg-accent/25",
-  selected: "bg-accent text-accent-fg hover:bg-accent-strong",
+  neutral: "bg-surface-2 text-muted hover:bg-surface-3 hover:text-text active:bg-surface-3",
+  accent: "bg-accent/15 text-accent hover:bg-accent/25 active:bg-accent/25",
+  selected: "bg-accent text-accent-fg hover:bg-accent-strong active:bg-accent-strong",
 };
 
 const sizeClasses = {
@@ -50,13 +50,8 @@ function chipClassName(
   interactive: boolean,
   className: string,
 ) {
-  return `inline-flex items-center justify-center gap-1.5 rounded-full font-medium transition ${interactive ? "cursor-pointer motion-safe:active:scale-[0.98]" : ""} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+  return `inline-flex items-center justify-center gap-1.5 rounded-full font-medium motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] ${interactive ? "cursor-pointer motion-safe:active:scale-[0.98]" : ""} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
 }
-
-const chipStyle = {
-  transitionDuration: "var(--dur)",
-  transitionTimingFunction: "var(--ease)",
-} as const;
 
 export function Chip(props: ChipProps) {
   // Clickable and removable modes are exclusive — never nest interactive controls.
@@ -77,7 +72,6 @@ export function Chip(props: ChipProps) {
         onClick={onClick}
         aria-pressed={pressed}
         className={chipClassName(variant, size, true, className)}
-        style={chipStyle}
         {...rest}
       >
         {children}
@@ -99,7 +93,6 @@ export function Chip(props: ChipProps) {
     return (
       <span
         className={chipClassName(variant, size, false, className)}
-        style={chipStyle}
         {...rest}
       >
         {children}
@@ -107,7 +100,7 @@ export function Chip(props: ChipProps) {
           type="button"
           aria-label={removeLabel ?? `Remove ${typeof children === "string" ? children : "chip"}`}
           onClick={onRemove}
-          className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-surface-3 motion-safe:active:scale-[0.98]"
+          className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-surface-3 active:bg-surface-3 motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:active:scale-[0.98]"
         >
           <span aria-hidden="true">×</span>
         </button>
@@ -126,7 +119,6 @@ export function Chip(props: ChipProps) {
   return (
     <span
       className={chipClassName(variant, size, false, className)}
-      style={chipStyle}
       {...rest}
     >
       {children}

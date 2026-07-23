@@ -1,19 +1,64 @@
 import type {
   ComponentPropsWithoutRef,
+  CSSProperties,
   ElementType,
   KeyboardEventHandler,
+  MouseEventHandler,
 } from "react";
 
-type CardOwnProps = {
+type CardVisualProps = {
   bordered?: boolean;
-  interactive?: boolean;
   padding?: "none" | "sm" | "md" | "lg";
   className?: string;
 };
 
-export type CardProps<T extends ElementType = "div"> = CardOwnProps & {
+type NativeInteractiveTag = "a" | "button";
+
+type OmitCardKeys =
+  | keyof CardVisualProps
+  | "as"
+  | "interactive"
+  | "onClick"
+  | "onKeyDown"
+  | "role"
+  | "tabIndex"
+  | "style";
+
+/** Non-interactive surface — no activation semantics. */
+export type CardStaticProps<T extends ElementType = "div"> = CardVisualProps & {
   as?: T;
-} & Omit<ComponentPropsWithoutRef<T>, keyof CardOwnProps | "as">;
+  interactive?: false;
+  onClick?: never;
+} & Omit<ComponentPropsWithoutRef<T>, OmitCardKeys>;
+
+/**
+ * Clickable non-native host. `interactive` and `onClick` are required together so
+ * the card always receives keyboard activation + the F1 focus ring.
+ */
+export type CardActionProps = CardVisualProps & {
+  as?: Exclude<keyof HTMLElementTagNameMap, NativeInteractiveTag>;
+  interactive: true;
+  onClick: MouseEventHandler<HTMLElement>;
+} & Omit<ComponentPropsWithoutRef<"div">, OmitCardKeys>;
+
+/**
+ * Visually interactive host that is already keyboard-accessible
+ * (`a` / `button`, or a custom Link-like component).
+ */
+export type CardNativeInteractiveProps<T extends ElementType> = CardVisualProps & {
+  as: T;
+  interactive: true;
+  onClick?: ComponentPropsWithoutRef<T>["onClick"];
+} & Omit<ComponentPropsWithoutRef<T>, OmitCardKeys>;
+
+export type CardProps<T extends ElementType = "div"> =
+  | CardStaticProps<T>
+  | CardActionProps
+  | (T extends NativeInteractiveTag
+      ? CardNativeInteractiveProps<T>
+      : T extends string
+        ? never
+        : CardNativeInteractiveProps<T>);
 
 const paddingClasses = {
   none: "",
@@ -23,32 +68,46 @@ const paddingClasses = {
 };
 
 /** Elements that already expose native keyboard activation + focus. */
-const NATIVE_INTERACTIVE = new Set(["a", "button"]);
+const NATIVE_INTERACTIVE = new Set<string>(["a", "button"]);
 
-export function Card<T extends ElementType = "div">({
-  as,
-  bordered = false,
-  className = "",
-  interactive = false,
-  padding = "md",
-  style,
-  onClick,
-  onKeyDown,
-  role,
-  tabIndex,
-  ...props
-}: CardProps<T>) {
+type CardRuntimeProps = CardVisualProps & {
+  as?: ElementType;
+  interactive?: boolean;
+  onClick?: MouseEventHandler<HTMLElement>;
+  onKeyDown?: KeyboardEventHandler<HTMLElement>;
+  role?: string;
+  tabIndex?: number;
+  style?: CSSProperties;
+};
+
+export function Card<T extends ElementType = "div">(props: CardProps<T>) {
+  const {
+    as,
+    bordered = false,
+    className = "",
+    interactive = false,
+    padding = "md",
+    style,
+    onClick,
+    onKeyDown,
+    role,
+    tabIndex,
+    ...rest
+  } = props as CardRuntimeProps;
+
   const Component = (as ?? "div") as ElementType;
   const nativelyInteractive =
     typeof Component === "string" && NATIVE_INTERACTIVE.has(Component);
-  // Non-native hosts (default div, section, etc.) need an a11y shim when interactive.
+  // Tie keyboard semantics to actual activation (onClick), not the visual `interactive` flag alone.
   // Custom components (e.g. Next.js Link) are assumed to render a native interactive host.
   const needsActivationShim =
-    interactive && typeof Component === "string" && !nativelyInteractive;
+    typeof onClick === "function" &&
+    typeof Component === "string" &&
+    !nativelyInteractive;
 
   const handleKeyDown: KeyboardEventHandler<HTMLElement> = (event) => {
-    (onKeyDown as KeyboardEventHandler<HTMLElement> | undefined)?.(event);
-    if (event.defaultPrevented || !needsActivationShim || !onClick) return;
+    onKeyDown?.(event);
+    if (event.defaultPrevented || !needsActivationShim) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       event.currentTarget.click();
@@ -57,17 +116,13 @@ export function Card<T extends ElementType = "div">({
 
   return (
     <Component
-      className={`rounded-lg bg-surface-1 [box-shadow:var(--shadow-card)] ${bordered ? "border border-border" : ""} ${interactive ? "cursor-pointer transition motion-safe:hover:-translate-y-0.5 motion-safe:hover:[box-shadow:var(--shadow-pop)] motion-safe:active:scale-[0.98]" : ""} ${paddingClasses[padding]} ${className}`}
-      style={{
-        transitionDuration: interactive ? "var(--dur)" : undefined,
-        transitionTimingFunction: interactive ? "var(--ease)" : undefined,
-        ...style,
-      }}
+      className={`rounded-lg bg-surface-1 [box-shadow:var(--shadow-card)] ${bordered ? "border border-border" : ""} ${interactive ? "cursor-pointer active:brightness-[0.96] motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:hover:-translate-y-0.5 motion-safe:hover:[box-shadow:var(--shadow-pop)] motion-safe:active:scale-[0.98]" : ""} ${paddingClasses[padding]} ${className}`}
+      style={style}
       onClick={onClick}
       onKeyDown={needsActivationShim || onKeyDown ? handleKeyDown : undefined}
       role={needsActivationShim ? (role ?? "button") : role}
       tabIndex={needsActivationShim ? (tabIndex ?? 0) : tabIndex}
-      {...props}
+      {...rest}
     />
   );
 }

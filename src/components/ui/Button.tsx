@@ -14,10 +14,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-accent-fg hover:bg-accent-strong",
-  secondary: "border border-border bg-surface-2 text-text hover:bg-surface-3",
-  ghost: "bg-transparent text-muted hover:bg-surface-2 hover:text-text",
-  danger: "bg-danger/10 text-danger hover:bg-danger hover:text-text",
+  primary: "bg-accent text-accent-fg hover:bg-accent-strong active:bg-accent-strong",
+  secondary: "border border-border bg-surface-2 text-text hover:bg-surface-3 active:bg-surface-3",
+  ghost: "bg-transparent text-muted hover:bg-surface-2 hover:text-text active:bg-surface-2",
+  danger: "bg-danger/10 text-danger hover:bg-danger hover:text-text active:bg-danger active:text-text",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -48,8 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={`inline-flex items-center justify-center gap-2 rounded-md font-semibold transition motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
-      style={{ transitionDuration: "var(--dur)", transitionTimingFunction: "var(--ease)" }}
+      className={`inline-flex items-center justify-center gap-2 rounded-md font-semibold motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
       {...props}
     >
       {loading ? <Spinner size="sm" /> : icon}

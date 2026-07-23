@@ -1,12 +1,12 @@
-import type { HTMLAttributes, ReactNode } from "react";
-import { Card } from "./Card";
+import type { ReactNode } from "react";
+import { Card, type CardStaticProps } from "./Card";
 
-export interface EmptyStateProps extends HTMLAttributes<HTMLDivElement> {
+export type EmptyStateProps = {
   icon?: ReactNode;
   title: string;
   description?: string;
   action?: ReactNode;
-}
+} & Omit<CardStaticProps<"div">, "as" | "bordered" | "children" | "interactive" | "onClick" | "padding">;
 
 export function EmptyState({
   action,
