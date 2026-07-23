@@ -4,10 +4,16 @@ export interface LogoProps {
   className?: string;
   size?: number;
   withWordmark?: boolean;
+  wordmarkClassName?: string;
 }
 
 /** WorkoutDeck's stacked-card play mark and optional wordmark lockup. */
-export function Logo({ className = "", size = 24, withWordmark = false }: LogoProps) {
+export function Logo({
+  className = "",
+  size = 24,
+  withWordmark = false,
+  wordmarkClassName = "",
+}: LogoProps) {
   return (
     <span
       className={`inline-flex items-center gap-[0.24em] text-accent ${className}`}
@@ -37,7 +43,9 @@ export function Logo({ className = "", size = 24, withWordmark = false }: LogoPr
         <path d="m13 10.5 7 4.5-7 4.5v-9Z" fill="var(--accent-fg)" />
       </svg>
       {withWordmark && (
-        <span className="text-[0.72em] font-extrabold tracking-[-0.03em] text-text">
+        <span
+          className={`logo-wordmark text-[0.72em] font-extrabold tracking-[-0.03em] text-text ${wordmarkClassName}`}
+        >
           WorkoutDeck
         </span>
       )}
