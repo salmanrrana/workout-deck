@@ -395,11 +395,15 @@ export default function VideoPlayerPage({
                 </div>
               ) : (
                 <p className="px-2 text-small leading-relaxed text-muted">
-                  No cues yet. Add them manually or extract them from the transcript.
+                  {provider === "youtube"
+                    ? "No cues yet. Add them manually or extract them from the transcript."
+                    : "No cues yet. Add them manually to build your workout timeline."}
                 </p>
               )}
               <div className="space-y-3 border-t border-border pt-4">
-                <AutoExtractButton videoId={video.id} onCuesExtracted={handleCuesChange} />
+                {provider === "youtube" && (
+                  <AutoExtractButton videoId={video.id} onCuesExtracted={handleCuesChange} />
+                )}
                 <CueEditor
                   videoId={video.id}
                   cues={video.cues}

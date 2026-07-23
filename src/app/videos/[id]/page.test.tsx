@@ -117,12 +117,16 @@ describe("Workout session cockpit", () => {
 
   it("renders the persisted Vimeo provider instead of forcing YouTube", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(JSON.stringify({ ...video, provider: "vimeo" }), { status: 200 }),
+      new Response(JSON.stringify({ ...video, provider: "vimeo", cues: [] }), { status: 200 }),
     );
 
     renderPage();
 
     expect(await screen.findByText("Vimeo workout player")).toBeTruthy();
     expect(screen.queryByText("YouTube workout player")).toBeNull();
+
+    fireEvent.click(screen.getByText("Workout cues"));
+    expect(screen.queryByRole("button", { name: "Extract cues from transcript" })).toBeNull();
+    expect(screen.getByText(/Add them manually to build your workout timeline/)).toBeTruthy();
   });
 });
