@@ -1,12 +1,8 @@
 import type { NextConfig } from "next";
 
-const verificationDistDir = process.env.BRAIN_DUMP_VERIFY_BOOT
-  ? ".next-verify"
-  : ".next";
-
 const nextConfig: NextConfig = {
-  // Verification may run alongside a developer's server; isolate Next's dev lock.
-  distDir: verificationDistDir,
+  // Dev, production, and verification commands may overlap; keep their locks isolated.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   images: {
     remotePatterns: [
       {

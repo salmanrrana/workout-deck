@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:verify": "BRAIN_DUMP_VERIFY_BOOT=1 next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "NODE_ENV=development next dev",
+    "dev:verify": "NODE_ENV=development NEXT_DIST_DIR=.next-verify next dev",
+    "build": "NODE_ENV=production NEXT_DIST_DIR=.next-build next build",
+    "start": "NODE_ENV=production NEXT_DIST_DIR=.next-build next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "test": "vitest run"
