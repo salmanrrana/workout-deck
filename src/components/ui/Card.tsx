@@ -92,6 +92,7 @@ type CardRuntimeProps = CardVisualProps & {
   role?: string;
   tabIndex?: number;
   style?: CSSProperties;
+  type?: "button" | "submit" | "reset";
 };
 
 export function Card<T extends CardTag = "div">(props: CardProps<T>) {
@@ -102,6 +103,7 @@ export function Card<T extends CardTag = "div">(props: CardProps<T>) {
     interactive = false,
     padding = "md",
     style,
+    type,
     onClick,
     onKeyDown,
     role,
@@ -135,6 +137,7 @@ export function Card<T extends CardTag = "div">(props: CardProps<T>) {
       onKeyDown={needsActivationShim || onKeyDown ? handleKeyDown : undefined}
       role={needsActivationShim ? (role ?? "button") : role}
       tabIndex={needsActivationShim ? (tabIndex ?? 0) : tabIndex}
+      type={Component === "button" ? (type ?? "button") : type}
       {...rest}
     />
   );

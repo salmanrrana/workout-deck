@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { VideoCard } from "@/components/VideoCard";
 import { Button, Chip, EmptyState, Input, Spinner } from "@/components/ui";
+import { buttonClassName } from "@/components/ui/Button";
 
 interface Video {
   id: string;
@@ -15,7 +16,6 @@ interface Video {
 }
 
 export default function VideosPage() {
-  const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -67,6 +67,7 @@ export default function VideosPage() {
   const clearFilters = () => {
     setSelectedTag(null);
     setSearchQuery("");
+    setDebouncedSearch("");
   };
 
   const hasFilters = selectedTag !== null || searchQuery !== "";
@@ -81,12 +82,10 @@ export default function VideosPage() {
             {selectedTag && ` tagged "${selectedTag}"`}
           </p>
         </div>
-        <Button
-          icon={<PlusIcon className="h-5 w-5" />}
-          onClick={() => router.push("/videos/new")}
-        >
+        <Link href="/videos/new" className={buttonClassName()}>
+          <PlusIcon className="h-5 w-5" />
           Add Video
-        </Button>
+        </Link>
       </div>
 
       {/* Search and Filters */}
@@ -155,12 +154,10 @@ export default function VideosPage() {
                 Clear filters
               </Button>
             ) : (
-              <Button
-                icon={<PlusIcon className="h-5 w-5" />}
-                onClick={() => router.push("/videos/new")}
-              >
+              <Link href="/videos/new" className={buttonClassName()}>
+                <PlusIcon className="h-5 w-5" />
                 Add Video
-              </Button>
+              </Link>
             )
           }
         />

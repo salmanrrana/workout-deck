@@ -84,6 +84,22 @@ describe("UI primitives", () => {
     expect(link.getAttribute("tabindex")).toBeNull();
   });
 
+  it("defaults button cards to a non-submitting type", () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Card as="button" interactive>
+          Choose plan
+        </Card>
+      </form>,
+    );
+
+    const card = screen.getByRole("button", { name: "Choose plan" });
+    expect(card.getAttribute("type")).toBe("button");
+    fireEvent.click(card);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("restricts Card hosts to semantic combinations", () => {
     const Wrapper = (props: React.ComponentPropsWithoutRef<"div">) => <div {...props} />;
 

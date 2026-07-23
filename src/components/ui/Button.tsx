@@ -26,6 +26,17 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "h-14 px-6 text-body",
 };
 
+type ButtonClassNameOptions = Pick<ButtonProps, "className" | "fullWidth" | "size" | "variant">;
+
+export function buttonClassName({
+  className = "",
+  fullWidth = false,
+  size = "md",
+  variant = "primary",
+}: ButtonClassNameOptions = {}) {
+  return `inline-flex items-center justify-center gap-2 rounded-md font-semibold motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     children,
@@ -48,7 +59,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={`inline-flex items-center justify-center gap-2 rounded-md font-semibold motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={buttonClassName({ className, fullWidth, size, variant })}
       {...props}
     >
       {loading ? <Spinner size="sm" /> : icon}
