@@ -91,6 +91,8 @@ describe("UI primitives", () => {
     const customHost = <Card as={Wrapper} interactive onClick={() => undefined}>Custom</Card>;
     // @ts-expect-error Native activating hosts must opt into interactive styling.
     const staticLink = <Card as="a" href="/videos">Videos</Card>;
+    // @ts-expect-error An anchor without href has no native keyboard semantics.
+    const hrefLessLink = <Card as="a" interactive>Videos</Card>;
     // @ts-expect-error Native activating hosts must opt into interactive styling.
     const staticButton = <Card as="button" type="button">Start</Card>;
     // @ts-expect-error Form controls are not supported Card hosts.
@@ -105,11 +107,12 @@ describe("UI primitives", () => {
     expect([
       customHost,
       staticLink,
+      hrefLessLink,
       staticButton,
       inputHost,
       selectHost,
       textareaHost,
       summaryHost,
-    ]).toHaveLength(7);
+    ]).toHaveLength(8);
   });
 });

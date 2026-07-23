@@ -63,7 +63,10 @@ export type CardNativeInteractiveProps<T extends NativeInteractiveTag> = CardVis
   as: T;
   interactive: true;
   onClick?: ComponentPropsWithoutRef<T>["onClick"];
-} & Omit<ComponentPropsWithoutRef<T>, OmitCardKeys>;
+} & Omit<ComponentPropsWithoutRef<T>, OmitCardKeys> &
+  (T extends "a"
+    ? { href: NonNullable<ComponentPropsWithoutRef<"a">["href"]> }
+    : Record<never, never>);
 
 export type CardProps<T extends CardTag = "div"> = T extends NativeInteractiveTag
   ? CardNativeInteractiveProps<T>
