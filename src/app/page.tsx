@@ -40,7 +40,7 @@ export default function Home() {
 
       <section className="mx-auto flex max-w-4xl flex-col items-center text-center">
         <h1>
-          <Logo size={64} withWordmark />
+          <Logo size="clamp(3rem, 12vw, 4rem)" withWordmark />
         </h1>
         <p className="mt-7 max-w-2xl text-balance text-h2 font-semibold tracking-[-0.02em] text-text sm:text-display-xl">
           Build your deck. Press play. Stay in motion.

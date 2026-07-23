@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 export interface LogoProps {
   className?: string;
-  size?: number;
+  size?: CSSProperties["fontSize"];
   withWordmark?: boolean;
   wordmarkClassName?: string;
 }
@@ -17,7 +17,7 @@ export function Logo({
   return (
     <span
       className={`inline-flex items-center gap-[0.24em] text-accent ${className}`}
-      style={{ fontSize: size } as CSSProperties}
+      style={{ fontSize: size }}
     >
       <svg
         aria-hidden="true"
