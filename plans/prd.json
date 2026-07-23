@@ -95,7 +95,7 @@
       "id": "ce3461d0-22ec-4779-8df2-38c4cbf31916",
       "title": "S3 · Workout session (video player) redesign — the cockpit",
       "passes": false,
-      "status": "backlog",
+      "status": "in_progress",
       "overview": "",
       "types": [],
       "designDecisions": [],
@@ -122,8 +122,8 @@
     {
       "id": "43db0644-fa60-4283-80ae-c7de5c25a6d1",
       "title": "S4 · Interval Timer screen — design from stub to instrument",
-      "passes": false,
-      "status": "ai_review",
+      "passes": true,
+      "status": "done",
       "overview": "",
       "types": [],
       "designDecisions": [],
@@ -152,7 +152,7 @@
       "id": "6e997b9b-2c71-415f-96de-98e6d196e223",
       "title": "S5 · Workout History screen — design from stub to activity view",
       "passes": false,
-      "status": "backlog",
+      "status": "in_progress",
       "overview": "",
       "types": [],
       "designDecisions": [],
@@ -173,7 +173,9 @@
         "screen",
         "history",
         "operate"
-      ]
+      ],
+      "blocked": true,
+      "blockedReason": "Verification infra_error: Boot command exited before readiness with code 1 and signal none."
     },
     {
       "id": "7870270f-e394-4c04-88c4-404affb195be",
