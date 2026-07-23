@@ -1,6 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+// GET /api/workout-logs - Return completed workouts with their source details
+export async function GET() {
+  try {
+    const logs = await prisma.workoutLog.findMany({
+      orderBy: { completedAt: "desc" },
+      include: {
+        video: {
+          select: {
+            id: true,
+            youtubeId: true,
+            provider: true,
+            title: true,
+          },
+        },
+        timerPreset: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(logs);
+  } catch (error) {
+    console.error("Failed to fetch workout logs:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch workout logs" },
+      { status: 500 }
+    );
+  }
+}
+
 // POST /api/workout-logs - Log a completed workout
 export async function POST(request: NextRequest) {
   let body;
