@@ -45,3 +45,19 @@ next-env.d.ts
 # database
 *.db
 *.db-journal
+
+# Brain Dump Ralph artifacts
+plans/prd.json
+plans/progress.txt
+plans/archives/
+plans/review-runs/
+plans/ralph*.sh
+.claude/ralph-context.md
+.claude/ralph-state.json
+.claude/capture-token-usage.log
+.claude/review-runs/
+.pi/opencode/*.log
+.pi/opencode/*.pid
+.pi/tmp/
+.ralph-prompt.md
+.ralph-services.json
