@@ -39,6 +39,8 @@ type TimerAction =
 
 type WakeLockSentinelLike = {
   release: () => Promise<void>;
+  addEventListener: EventTarget["addEventListener"];
+  removeEventListener: EventTarget["removeEventListener"];
 };
 
 type NavigatorWithWakeLock = Navigator & {
@@ -237,20 +239,47 @@ export default function TimerPage() {
     if (!wakeLock) return;
 
     let active = true;
+    let requestInFlight = false;
     let sentinel: WakeLockSentinelLike | null = null;
-    void wakeLock.request("screen").then((lock) => {
-      if (!active) {
-        void lock.release();
-        return;
+
+    const requestWakeLock = async () => {
+      if (!active || requestInFlight || sentinel || document.visibilityState !== "visible") return;
+
+      requestInFlight = true;
+      try {
+        const lock = await wakeLock.request("screen");
+        if (!active) {
+          void lock.release();
+          return;
+        }
+        sentinel = lock;
+        lock.addEventListener("release", handleRelease, { once: true });
+      } catch {
+        // Wake Lock is a progressive enhancement; the timer remains fully usable.
+      } finally {
+        requestInFlight = false;
       }
-      sentinel = lock;
-    }).catch(() => {
-      // Wake Lock is a progressive enhancement; the timer remains fully usable.
-    });
+    };
+    const handleRelease = () => {
+      sentinel = null;
+      void requestWakeLock();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void requestWakeLock();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    void requestWakeLock();
 
     return () => {
       active = false;
-      if (sentinel) void sentinel.release();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      const currentSentinel = sentinel;
+      sentinel = null;
+      if (currentSentinel) {
+        currentSentinel.removeEventListener("release", handleRelease);
+        void currentSentinel.release();
+      }
     };
   }, [timer.running, timer.paused]);
 

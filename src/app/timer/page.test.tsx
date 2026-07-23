@@ -10,6 +10,8 @@ vi.mock("@/lib/audio", () => ({
 describe("Interval Timer", () => {
   afterEach(() => {
     cleanup();
+    Reflect.deleteProperty(navigator, "wakeLock");
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -86,6 +88,43 @@ describe("Interval Timer", () => {
 
     expect(screen.getByRole("timer", { name: "REST 00:05" })).toBeTruthy();
     expect(screen.getByText("Round 1 of 2")).toBeTruthy();
+  });
+
+  it("reacquires the wake lock when a running timer returns to the foreground", async () => {
+    let visibility: DocumentVisibilityState = "visible";
+    vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility);
+
+    const firstLock = Object.assign(new EventTarget(), {
+      release: vi.fn().mockResolvedValue(undefined),
+    });
+    const secondLock = Object.assign(new EventTarget(), {
+      release: vi.fn().mockResolvedValue(undefined),
+    });
+    const request = vi.fn()
+      .mockResolvedValueOnce(firstLock)
+      .mockResolvedValueOnce(secondLock);
+    Object.defineProperty(navigator, "wakeLock", {
+      configurable: true,
+      value: { request },
+    });
+
+    render(<TimerPage />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+      await Promise.resolve();
+    });
+    expect(request).toHaveBeenCalledTimes(1);
+
+    visibility = "hidden";
+    fireEvent(document, new Event("visibilitychange"));
+    firstLock.dispatchEvent(new Event("release"));
+    await act(async () => Promise.resolve());
+    expect(request).toHaveBeenCalledTimes(1);
+
+    visibility = "visible";
+    fireEvent(document, new Event("visibilitychange"));
+    await act(async () => Promise.resolve());
+    expect(request).toHaveBeenCalledTimes(2);
   });
 
   it("completes a configured sequence after the final work interval", async () => {
