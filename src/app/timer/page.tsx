@@ -303,6 +303,11 @@ export default function TimerPage() {
     dispatch({ type: "start", config });
   };
 
+  const skipInterval = () => {
+    lastReconciledAt.current = Date.now();
+    dispatch({ type: "skip" });
+  };
+
   const activeTotal = timer.phase === "countIn"
     ? COUNT_IN_SECONDS
     : timer.phase === "rest"
@@ -404,7 +409,7 @@ export default function TimerPage() {
               <Button size="lg" variant="secondary" onClick={() => dispatch({ type: "reset", config })}>
                 Reset
               </Button>
-              <Button size="lg" variant="ghost" disabled={!timer.running} onClick={() => dispatch({ type: "skip" })}>
+              <Button size="lg" variant="ghost" disabled={!timer.running} onClick={skipInterval}>
                 Skip interval
               </Button>
             </div>

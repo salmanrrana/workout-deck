@@ -68,6 +68,31 @@ describe("Interval Timer", () => {
     expect(screen.getByLabelText("Work seconds").hasAttribute("disabled")).toBe(false);
   });
 
+  it("starts a manually skipped interval with its full configured duration", async () => {
+    vi.useFakeTimers();
+    const startedAt = new Date("2026-01-01T12:00:00.000Z");
+    vi.setSystemTime(startedAt);
+    render(<TimerPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Tabata: 20 / 10 × 8" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+      await Promise.resolve();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Skip interval" }));
+    expect(screen.getByRole("timer", { name: "WORK 00:20" })).toBeTruthy();
+
+    await act(async () => vi.advanceTimersByTimeAsync(900));
+    fireEvent.click(screen.getByRole("button", { name: "Skip interval" }));
+    expect(screen.getByRole("timer", { name: "REST 00:10" })).toBeTruthy();
+
+    await act(async () => vi.advanceTimersByTimeAsync(100));
+    expect(screen.getByRole("timer", { name: "REST 00:10" })).toBeTruthy();
+
+    await act(async () => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByRole("timer", { name: "REST 00:09" })).toBeTruthy();
+  });
+
   it("catches up from elapsed wall-clock time after the tab was suspended", async () => {
     vi.useFakeTimers();
     const startedAt = new Date("2026-01-01T12:00:00.000Z");
