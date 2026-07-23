@@ -16,7 +16,7 @@ const sizeClasses = {
 };
 
 export function Spinner({ className = "", size = "md", label, ...props }: SpinnerProps) {
-  const ringClassName = `inline-block shrink-0 animate-spin rounded-full border-border border-t-accent ${sizeClasses[size]}`;
+  const ringClassName = `inline-block shrink-0 rounded-full border-border border-t-accent motion-safe:animate-spin ${sizeClasses[size]}`;
 
   if (!label) {
     return (
