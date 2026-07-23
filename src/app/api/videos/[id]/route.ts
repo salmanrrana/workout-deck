@@ -81,6 +81,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    const sourceChanged = Boolean(
+      (youtubeId && youtubeId !== existing.youtubeId)
+      || (provider !== undefined && provider !== existing.provider),
+    );
+
     const video = await prisma.video.update({
       where: { id },
       data: {
@@ -89,6 +94,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         ...(title && { title }),
         ...(tags !== undefined && { tags: stringifyTags(tags) }),
         ...(notes !== undefined && { notes: notes || null }),
+        ...(sourceChanged && { cues: { deleteMany: {} } }),
       },
     });
 

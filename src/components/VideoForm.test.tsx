@@ -222,6 +222,50 @@ describe("VideoForm", () => {
     expect((screen.getByLabelText(/Title/) as HTMLInputElement).value).toBe("My custom workout title");
   });
 
+  it("warns that saved cues will be removed when an edit replaces the source", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const requestUrl = String(input);
+      if (requestUrl === "/api/videos") return Promise.resolve(jsonResponse([]));
+      if (requestUrl === "/api/videos/video-1") {
+        return Promise.resolve(jsonResponse({
+          id: "video-1",
+          youtubeId: "abc123def45",
+          provider: "youtube",
+          title: "Original workout",
+          tags: [],
+          notes: null,
+          cues: [{ id: "cue-1" }, { id: "cue-2" }],
+        }));
+      }
+      if (requestUrl.startsWith("/api/youtube/info")) {
+        const replacement = requestUrl.includes("zyx987wvu65");
+        return Promise.resolve(jsonResponse({
+          id: replacement ? "zyx987wvu65" : "abc123def45",
+          title: replacement ? "Replacement workout" : "Original workout",
+          thumbnail: null,
+        }));
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    });
+
+    render(<VideoForm mode="edit" videoId="video-1" />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    fireEvent.change(screen.getByLabelText(/YouTube URL or video ID/), {
+      target: { value: "zyx987wvu65" },
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    expect(screen.getByRole("status").textContent).toContain(
+      "remove all 2 saved exercise cues",
+    );
+  });
+
   it("loads an existing card and saves changes through the edit route", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       const url = String(input);

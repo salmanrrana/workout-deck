@@ -33,6 +33,13 @@ interface StoredVideo {
   title: string;
   tags: string[];
   notes: string | null;
+  cues?: Array<{ id: string }>;
+}
+
+interface OriginalSource {
+  provider: VideoProvider;
+  id: string;
+  cueCount: number;
 }
 
 interface VideoFormProps {
@@ -71,6 +78,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
   const [url, setUrl] = useState("");
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [previewSourceKey, setPreviewSourceKey] = useState<string | null>(null);
+  const [originalSource, setOriginalSource] = useState<OriginalSource | null>(null);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -124,6 +132,11 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
           title: video.title,
         });
         setPreviewSourceKey(videoSourceKey(storedProvider, storedUrl));
+        setOriginalSource({
+          provider: storedProvider,
+          id: video.youtubeId,
+          cueCount: video.cues?.length ?? 0,
+        });
         setTitle(video.title);
         setTags(Array.isArray(video.tags) ? video.tags : []);
         setNotes(video.notes ?? "");
@@ -238,6 +251,12 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
 
   const hasCurrentVideo = Boolean(
     videoInfo?.id && previewSourceKey === videoSourceKey(provider, url),
+  );
+  const sourceChanged = Boolean(
+    mode === "edit"
+      && originalSource
+      && hasCurrentVideo
+      && (provider !== originalSource.provider || videoInfo?.id !== originalSource.id),
   );
   const canSubmit = hasCurrentVideo && Boolean(title.trim()) && !isSaving && !isHydrating;
   const disabledReason = !videoInfo?.id
@@ -355,16 +374,23 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
                 </div>
               </fieldset>
 
-              <Input
-                id="video-url"
-                type="text"
-                label={`${providerLabels[provider]} URL or video ID`}
-                value={url}
-                onChange={(event) => changeUrl(event.target.value)}
-                placeholder={provider === "youtube" ? "youtube.com/watch?v=… or 11-character ID" : "vimeo.com/… or numeric ID"}
-                hint={`Paste the public ${providerLabels[provider]} link or video ID for this workout.`}
-                required
-              />
+              <div>
+                <Input
+                  id="video-url"
+                  type="text"
+                  label={`${providerLabels[provider]} URL or video ID`}
+                  value={url}
+                  onChange={(event) => changeUrl(event.target.value)}
+                  placeholder={provider === "youtube" ? "youtube.com/watch?v=… or 11-character ID" : "vimeo.com/… or numeric ID"}
+                  hint={`Paste the public ${providerLabels[provider]} link or video ID for this workout.`}
+                  required
+                />
+                {sourceChanged && originalSource && originalSource.cueCount > 0 && (
+                  <p role="status" className="mt-3 rounded-md bg-paused/10 px-4 py-3 text-small font-medium leading-relaxed text-paused">
+                    Saving this new source will remove {originalSource.cueCount === 1 ? "the saved exercise cue" : `all ${originalSource.cueCount} saved exercise cues`} from the old video so they do not appear at the wrong times.
+                  </p>
+                )}
+              </div>
 
               <Input
                 id="video-title"
