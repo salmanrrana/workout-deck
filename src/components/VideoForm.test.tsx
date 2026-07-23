@@ -102,6 +102,43 @@ describe("VideoForm", () => {
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
   });
 
+  it("clears an auto-filled title when replacement metadata falls back", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const requestUrl = String(input);
+      if (requestUrl === "/api/videos") return Promise.resolve(jsonResponse([]));
+      if (requestUrl.includes("abc123def45")) {
+        return Promise.resolve(jsonResponse({
+          id: "abc123def45",
+          title: "Original workout",
+          thumbnail: null,
+        }));
+      }
+      if (requestUrl.includes("zyx987wvu65")) {
+        return Promise.resolve(jsonResponse({ error: "Unavailable" }, 404));
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    });
+
+    render(<VideoForm mode="create" />);
+    const urlInput = screen.getByLabelText(/YouTube URL/);
+    const titleInput = screen.getByLabelText(/Title/) as HTMLInputElement;
+    const submit = screen.getByRole("button", { name: "Add to deck" });
+
+    fireEvent.change(urlInput, { target: { value: "https://youtube.com/watch?v=abc123def45" } });
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(titleInput.value).toBe("Original workout");
+    expect(submit.hasAttribute("disabled")).toBe(false);
+
+    fireEvent.change(urlInput, { target: { value: "https://youtube.com/watch?v=zyx987wvu65" } });
+    expect(titleInput.value).toBe("");
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    expect(titleInput.value).toBe("");
+    expect(screen.getByText("Preview ready — add a title")).toBeTruthy();
+    expect(submit.hasAttribute("disabled")).toBe(true);
+  });
+
   it("keeps a saved custom title when edit preview metadata loads", async () => {
     vi.useFakeTimers();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {

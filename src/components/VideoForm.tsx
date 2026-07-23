@@ -219,6 +219,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
     setUrl(nextUrl);
     setVideoInfo(null);
     setPreviewSourceKey(null);
+    if (!titleEditedRef.current) setTitle("");
     setIsFetching(Boolean(extractProviderId(provider, nextUrl)));
     setError(null);
   };
@@ -230,6 +231,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
     setUrl("");
     setVideoInfo(null);
     setPreviewSourceKey(null);
+    if (!titleEditedRef.current) setTitle("");
     setIsFetching(false);
     setError(null);
   };
