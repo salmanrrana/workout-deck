@@ -1,6 +1,7 @@
 {
   "start": ["pnpm", "dev:verify", "--hostname", "{host}", "--port", "{port}"],
   "commands": [
-    ["pnpm", "vitest", "run", "src/app/history/page.test.tsx", "--no-color"]
+    ["pnpm", "vitest", "run", "src/app/history/page.test.tsx", "--no-color"],
+    ["pnpm", "vitest", "run", "src/components/VideoForm.test.tsx", "--no-color"]
   ]
 }
