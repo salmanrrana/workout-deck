@@ -106,6 +106,7 @@ export default function VideosPage() {
             <span className="text-small text-muted">Filter by tag:</span>
             <Chip
               variant={selectedTag === null ? "selected" : "neutral"}
+              pressed={selectedTag === null}
               onClick={() => setSelectedTag(null)}
             >
               All
@@ -113,6 +114,7 @@ export default function VideosPage() {
             {allTags.map((tag) => (
               <Chip
                 key={tag}
+                pressed={selectedTag === tag}
                 onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
                 variant={selectedTag === tag ? "selected" : "neutral"}
               >
@@ -133,7 +135,7 @@ export default function VideosPage() {
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <Spinner size="lg" />
+          <Spinner size="lg" label="Loading videos" />
         </div>
       )}
 

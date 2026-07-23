@@ -19,12 +19,27 @@ describe("UI primitives", () => {
     expect(screen.getByText("A title is required").id).toBe(input.getAttribute("aria-describedby"));
   });
 
-  it("activates clickable chips from the keyboard", () => {
+  it("activates clickable chips as native buttons with pressed state", () => {
     const onClick = vi.fn();
-    render(<Chip onClick={onClick}>Mobility</Chip>);
+    render(
+      <Chip onClick={onClick} pressed>
+        Mobility
+      </Chip>,
+    );
 
-    fireEvent.keyDown(screen.getByRole("button", { name: "Mobility" }), { key: "Enter" });
+    const chip = screen.getByRole("button", { name: "Mobility" });
+    expect(chip.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(chip);
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("keeps removable chips free of nested clickable roots", () => {
+    const onRemove = vi.fn();
+    const { container } = render(<Chip onRemove={onRemove}>Strength</Chip>);
+
+    expect(container.querySelectorAll("button")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Remove Strength" }));
+    expect(onRemove).toHaveBeenCalledOnce();
   });
 
   it("renders empty-state guidance and its action", () => {
