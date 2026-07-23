@@ -93,7 +93,23 @@ describe("UI primitives", () => {
     const staticLink = <Card as="a" href="/videos">Videos</Card>;
     // @ts-expect-error Native activating hosts must opt into interactive styling.
     const staticButton = <Card as="button" type="button">Start</Card>;
+    // @ts-expect-error Form controls are not supported Card hosts.
+    const inputHost = <Card as="input" interactive onClick={() => undefined} />;
+    // @ts-expect-error Form controls are not supported Card hosts.
+    const selectHost = <Card as="select" interactive onClick={() => undefined} />;
+    // @ts-expect-error Form controls are not supported Card hosts.
+    const textareaHost = <Card as="textarea" interactive onClick={() => undefined} />;
+    // @ts-expect-error Summary has native disclosure activation semantics.
+    const summaryHost = <Card as="summary" interactive onClick={() => undefined}>Details</Card>;
 
-    expect([customHost, staticLink, staticButton]).toHaveLength(3);
+    expect([
+      customHost,
+      staticLink,
+      staticButton,
+      inputHost,
+      selectHost,
+      textareaHost,
+      summaryHost,
+    ]).toHaveLength(7);
   });
 });

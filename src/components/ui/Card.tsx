@@ -13,7 +13,20 @@ type CardVisualProps = {
 };
 
 type NativeInteractiveTag = "a" | "button";
-type StaticCardTag = Exclude<keyof HTMLElementTagNameMap, NativeInteractiveTag>;
+type StaticCardTag =
+  | "div"
+  | "article"
+  | "section"
+  | "aside"
+  | "header"
+  | "footer"
+  | "main"
+  | "nav"
+  | "figure"
+  | "figcaption"
+  | "ul"
+  | "ol"
+  | "li";
 type CardTag = StaticCardTag | NativeInteractiveTag;
 
 type OmitCardKeys =
