@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { VideoCard } from "@/components/VideoCard";
+import { Button, Chip, EmptyState, Input, Spinner } from "@/components/ui";
 
 interface Video {
   id: string;
@@ -14,10 +15,12 @@ interface Video {
 }
 
 export default function VideosPage() {
+  const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchVideos = useCallback(async () => {
@@ -25,7 +28,7 @@ export default function VideosPage() {
     try {
       const params = new URLSearchParams();
       if (selectedTag) params.set("tag", selectedTag);
-      if (searchQuery) params.set("search", searchQuery);
+      if (debouncedSearch) params.set("search", debouncedSearch);
 
       const res = await fetch(`/api/videos?${params.toString()}`);
       if (res.ok) {
@@ -44,14 +47,7 @@ export default function VideosPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTag, searchQuery]);
-
-  useEffect(() => {
-    fetchVideos();
-  }, [fetchVideos]);
-
-  // Debounced search
-  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  }, [selectedTag, debouncedSearch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -61,9 +57,8 @@ export default function VideosPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (debouncedSearch !== searchQuery) return;
     fetchVideos();
-  }, [debouncedSearch, fetchVideos, searchQuery]);
+  }, [fetchVideos]);
 
   const handleDelete = (id: string) => {
     setVideos((prev) => prev.filter((v) => v.id !== id));
@@ -78,116 +73,95 @@ export default function VideosPage() {
 
   return (
     <div className="py-8">
-      {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold sm:text-4xl">Video Library</h1>
-          <p className="mt-1 text-zinc-400">
+          <p className="mt-1 text-muted">
             {videos.length} video{videos.length !== 1 ? "s" : ""}
             {selectedTag && ` tagged "${selectedTag}"`}
           </p>
         </div>
-        <Link
-          href="/videos/new"
-          className="flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-2 font-medium text-white transition-colors hover:bg-green-700"
+        <Button
+          icon={<PlusIcon className="h-5 w-5" />}
+          onClick={() => router.push("/videos/new")}
         >
-          <PlusIcon className="h-5 w-5" />
           Add Video
-        </Link>
+        </Button>
       </div>
 
       {/* Search and Filters */}
       <div className="mb-6 space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
-          <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500" />
-          <input
-            type="text"
-            placeholder="Search videos by title..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="min-h-[44px] w-full rounded-lg bg-zinc-900 py-2 pl-12 pr-4 text-white placeholder-zinc-500 outline-none ring-1 ring-zinc-700 transition-all focus:ring-2 focus:ring-green-500"
-          />
-        </div>
+        <Input
+          aria-label="Search videos"
+          type="search"
+          placeholder="Search videos by title..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          leadingIcon={<SearchIcon className="h-5 w-5" />}
+        />
 
         {/* Tag Filters */}
         {allTags.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-zinc-500">Filter by tag:</span>
-            <button
+            <span className="text-small text-muted">Filter by tag:</span>
+            <Chip
+              variant={selectedTag === null ? "selected" : "neutral"}
               onClick={() => setSelectedTag(null)}
-              className={`min-h-[36px] rounded-full px-3 py-1 text-sm transition-colors ${
-                selectedTag === null
-                  ? "bg-green-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
             >
               All
-            </button>
+            </Chip>
             {allTags.map((tag) => (
-              <button
+              <Chip
                 key={tag}
                 onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-                className={`min-h-[36px] rounded-full px-3 py-1 text-sm transition-colors ${
-                  selectedTag === tag
-                    ? "bg-green-600 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                }`}
+                variant={selectedTag === tag ? "selected" : "neutral"}
               >
                 {tag}
-              </button>
+              </Chip>
             ))}
           </div>
         )}
 
         {/* Clear Filters */}
         {hasFilters && (
-          <button
-            onClick={clearFilters}
-            className="text-sm text-zinc-400 underline hover:text-white"
-          >
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
             Clear all filters
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-green-500" />
+          <Spinner size="lg" />
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && videos.length === 0 && (
-        <div className="rounded-xl bg-zinc-900 p-8 text-center">
-          {hasFilters ? (
-            <>
-              <p className="text-lg text-zinc-400">
-                No videos match your filters.
-              </p>
-              <button
-                onClick={clearFilters}
-                className="mt-4 text-green-500 underline hover:text-green-400"
-              >
+        <EmptyState
+          icon={<VideoIcon className="h-6 w-6" />}
+          title={hasFilters ? "No videos match your filters" : "Your video library is empty"}
+          description={
+            hasFilters
+              ? "Try clearing your search or tag filters."
+              : "Add your first workout video to start building your deck."
+          }
+          action={
+            hasFilters ? (
+              <Button variant="secondary" onClick={clearFilters}>
                 Clear filters
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-lg text-zinc-400">
-                No videos yet. Add your first workout video!
-              </p>
-              <Link
-                href="/videos/new"
-                className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-green-600 px-6 py-2 font-medium text-white transition-colors hover:bg-green-700"
+              </Button>
+            ) : (
+              <Button
+                icon={<PlusIcon className="h-5 w-5" />}
+                onClick={() => router.push("/videos/new")}
               >
-                <PlusIcon className="h-5 w-5" />
                 Add Video
-              </Link>
-            </>
-          )}
-        </div>
+              </Button>
+            )
+          }
+        />
       )}
 
       {/* Video Grid */}
@@ -232,6 +206,21 @@ function SearchIcon({ className }: { className?: string }) {
         d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z"
         clipRule="evenodd"
       />
+    </svg>
+  );
+}
+
+function VideoIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      className={className}
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m10 9 5 3-5 3V9Z" fill="currentColor" stroke="none" />
     </svg>
   );
 }

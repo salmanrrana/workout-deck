@@ -93,3 +93,25 @@ body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+.ui-skeleton {
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in srgb, var(--surface-3) 75%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s var(--ease) infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-skeleton {
+    animation: none;
+  }
+}
