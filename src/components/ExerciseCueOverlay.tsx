@@ -62,7 +62,7 @@ export function ExerciseCueOverlay({
 
       <div
         key={activeCue?.id ?? "waiting"}
-        className="min-h-32 px-5 py-6 pr-16 sm:flex sm:items-center sm:gap-5 sm:px-6"
+        className="cue-change min-h-32 px-5 py-6 pr-16 sm:flex sm:items-center sm:gap-5 sm:px-6"
         aria-live="polite"
       >
         {activeCue ? (

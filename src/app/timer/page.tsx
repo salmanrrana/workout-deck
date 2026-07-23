@@ -370,7 +370,8 @@ export default function TimerPage() {
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
               <p className="text-label font-bold text-[var(--timer-color)]">{currentPhaseLabel}</p>
               <div
-                className={`font-mono text-[clamp(4.5rem,14vw,10rem)] font-bold leading-none tracking-[-0.03em] text-text tabular-nums ${finalSeconds ? "timer-final-pulse" : ""}`}
+                key={timer.phase === "countIn" ? displayTime : timer.phase}
+                className={`font-mono text-[clamp(4.5rem,14vw,10rem)] font-bold leading-none tracking-[-0.03em] text-text tabular-nums ${timer.phase === "countIn" ? "timer-count-in" : ""} ${finalSeconds ? "timer-final-pulse" : ""}`}
                 role="timer"
                 aria-label={`${currentPhaseLabel} ${displayTime}`}
               >

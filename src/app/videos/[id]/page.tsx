@@ -364,10 +364,10 @@ export default function VideoPlayerPage({
             size="lg"
             variant="secondary"
             fullWidth
-            icon={logSuccess ? <CheckIcon className="h-5 w-5" /> : <ClipboardIcon className="h-5 w-5" />}
+            icon={logSuccess ? <CheckIcon className="success-morph h-5 w-5" /> : <ClipboardIcon className="h-5 w-5" />}
             className={logSuccess ? "border-accent/40 bg-accent/15 text-accent" : ""}
           >
-            {logSuccess ? "Workout logged" : "Log workout"}
+            {logSuccess ? <span className="success-morph">Workout logged</span> : "Log workout"}
           </Button>
           {logError && <p role="alert" className="px-2 text-center text-small text-danger">{logError}</p>}
 

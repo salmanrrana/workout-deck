@@ -94,33 +94,20 @@ body {
   text-transform: uppercase;
 }
 
+@property --timer-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #38E07B;
+}
+
 .timer-instrument {
   background:
     radial-gradient(circle at 38% 42%, color-mix(in srgb, var(--timer-color) 10%, transparent), transparent 32rem),
     var(--bg-base);
-  transition: background-color var(--dur-slow) var(--ease);
-}
-
-.timer-progress-ring {
-  transition:
-    stroke-dashoffset 1s linear,
-    stroke var(--dur-slow) var(--ease);
 }
 
 .timer-final-pulse {
-  animation: timer-final-pulse var(--dur-slow) var(--ease) infinite alternate;
-}
-
-@keyframes timer-final-pulse {
-  from {
-    filter: drop-shadow(0 0 0 transparent);
-    transform: scale(1);
-  }
-  to {
-    color: var(--timer-color);
-    filter: drop-shadow(0 8px 24px color-mix(in srgb, var(--timer-color) 35%, transparent));
-    transform: scale(1.035);
-  }
+  color: var(--timer-color);
 }
 
 .ui-skeleton {
@@ -131,12 +118,102 @@ body {
     transparent 80%
   );
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.6s var(--ease) infinite;
+}
+
+@keyframes cue-change {
+  from {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes timer-final-pulse {
+  from {
+    filter: drop-shadow(0 0 0 transparent);
+    transform: scale(1);
+  }
+  to {
+    filter: drop-shadow(0 8px 24px color-mix(in srgb, var(--timer-color) 35%, transparent));
+    transform: scale(1.035);
+  }
+}
+
+@keyframes timer-count-in {
+  from {
+    opacity: 0.6;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes page-mount {
+  from {
+    opacity: 0.72;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes success-morph {
+  from {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes skeleton-shimmer {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .timer-instrument {
+    transition: --timer-color var(--dur-slow) var(--ease);
+  }
+
+  .timer-progress-ring {
+    transition:
+      stroke-dashoffset 1s linear,
+      stroke var(--dur-slow) var(--ease);
+  }
+
+  .cue-change {
+    animation: cue-change var(--dur) var(--ease) both;
+  }
+
+  .timer-final-pulse {
+    animation: timer-final-pulse var(--dur-slow) var(--ease) infinite alternate;
+  }
+
+  .timer-count-in {
+    animation: timer-count-in var(--dur) var(--ease) both;
+  }
+
+  .page-mount {
+    animation: page-mount var(--dur) var(--ease) both;
+  }
+
+  .success-morph {
+    animation: success-morph var(--dur) var(--ease) both;
+  }
+
+  .ui-skeleton {
+    animation: skeleton-shimmer 1.6s var(--ease) infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -145,12 +222,14 @@ body {
     transition: none;
   }
 
+  .cue-change,
+  .page-mount,
+  .success-morph,
+  .timer-count-in,
   .timer-final-pulse,
   .ui-skeleton {
     animation: none;
-  }
-
-  .timer-final-pulse {
-    color: var(--timer-color);
+    opacity: 1;
+    transform: none;
   }
 }
