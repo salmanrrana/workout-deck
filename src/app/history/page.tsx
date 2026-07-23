@@ -105,7 +105,11 @@ export default function HistoryPage() {
           icon={<HistoryIcon className="h-6 w-6" />}
           title="No workouts logged yet"
           description="Finish a workout to start your streak and see your training rhythm take shape."
-          action={<Link href="/videos" className={buttonClassName()}>Choose a workout</Link>}
+          action={(
+            <Link href="/videos" data-history-empty-action className={buttonClassName()}>
+              Choose a workout
+            </Link>
+          )}
         />
       )}
 
