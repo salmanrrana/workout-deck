@@ -155,7 +155,20 @@ export default function VideoPlayerPage({
 
   const handleCuesChange = useCallback((newCues: ExerciseCue[]) => {
     setVideo((previous) => (previous ? { ...previous, cues: newCues } : previous));
-  }, []);
+
+    let current: ExerciseCue | null = null;
+    for (const cue of newCues) {
+      if (
+        cue.timestamp <= player.currentTime
+        && (!current || cue.timestamp >= current.timestamp)
+      ) {
+        current = cue;
+      }
+    }
+
+    prevCueRef.current = current?.id ?? null;
+    setActiveCue(current);
+  }, [player.currentTime]);
 
   const handleLogWorkout = async () => {
     if (!video || isLogging) return;

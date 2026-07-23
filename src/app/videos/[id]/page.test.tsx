@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ExerciseCue } from "@/lib/types";
 import VideoPlayerPage from "./page";
 
 const player = vi.hoisted(() => ({
@@ -35,7 +36,23 @@ vi.mock("@/components/VimeoPlayer", () => ({
 }));
 
 vi.mock("@/components/CueEditor", () => ({
-  CueEditor: () => <div>Cue editing controls</div>,
+  CueEditor: ({
+    cues,
+    onCuesChange,
+  }: {
+    cues: ExerciseCue[];
+    onCuesChange: (cues: ExerciseCue[]) => void;
+  }) => (
+    <button
+      onClick={() => onCuesChange(cues.map((cue) => (
+        cue.id === "cue-2"
+          ? { ...cue, exerciseName: "Goblet squats", timestamp: 62 }
+          : cue
+      )))}
+    >
+      Save active cue edit
+    </button>
+  ),
 }));
 
 vi.mock("@/components/AutoExtractButton", () => ({
@@ -89,6 +106,25 @@ describe("Workout session cockpit", () => {
     expect(player.play).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole("button", { name: "Restart video" }));
     expect(player.seekTo).toHaveBeenCalledWith(0);
+  });
+
+  it("refreshes the glanceable active cue after that cue is edited", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify(video), { status: 200 }),
+    );
+
+    renderPage();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Morning strength" })).toBeTruthy());
+
+    fireEvent.click(screen.getByRole("button", { name: "YouTube workout player" }));
+    expect((await screen.findAllByText("Squats")).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByText("Workout cues"));
+    fireEvent.click(screen.getByRole("button", { name: "Save active cue edit" }));
+
+    await waitFor(() => expect(screen.getAllByText("Goblet squats").length).toBeGreaterThan(0));
+    expect(screen.queryByText("Squats")).toBeNull();
+    expect(screen.getByText("Active since 1:02")).toBeTruthy();
   });
 
   it("keeps cue maintenance secondary and logs the workout in place", async () => {
