@@ -69,6 +69,52 @@ describe("VideoForm", () => {
     expect(screen.queryByRole("button", { name: "Remove recovery tag" })).toBeNull();
   });
 
+  it.each([
+    ["YouTube", "abc123def45", "/api/youtube/info"],
+    ["Vimeo", "123456789", "/api/vimeo/info"],
+  ])("accepts a supported bare %s video ID through native form submission", async (provider, bareId, infoRoute) => {
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const requestUrl = String(input);
+      if (requestUrl === "/api/videos" && !init) return Promise.resolve(jsonResponse([]));
+      if (requestUrl.startsWith(infoRoute)) {
+        return Promise.resolve(jsonResponse({
+          id: bareId,
+          title: `${provider} workout`,
+          thumbnail: null,
+        }));
+      }
+      if (requestUrl === "/api/videos" && init?.method === "POST") {
+        return Promise.resolve(jsonResponse({ id: "video-new" }));
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    });
+
+    render(<VideoForm mode="create" />);
+    if (provider === "Vimeo") fireEvent.click(screen.getByRole("button", { name: "Vimeo" }));
+
+    const sourceInput = screen.getByLabelText(new RegExp(`${provider} URL or video ID`)) as HTMLInputElement;
+    expect(sourceInput.type).toBe("text");
+    fireEvent.change(sourceInput, { target: { value: bareId } });
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    const submit = screen.getByRole("button", { name: "Add to deck" });
+    expect(submit.hasAttribute("disabled")).toBe(false);
+    fireEvent.click(submit);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(push).toHaveBeenCalledWith("/videos");
+    const create = fetchMock.mock.calls.find(([url, init]) => String(url) === "/api/videos" && init?.method === "POST");
+    expect(create).toBeTruthy();
+    expect(JSON.parse(String(create?.[1]?.body))).toMatchObject({
+      youtubeId: bareId,
+      provider: provider.toLowerCase(),
+    });
+  });
+
   it("invalidates a ready preview as soon as its URL changes", async () => {
     vi.useFakeTimers();
     const pendingPreview = new Promise<Response>(() => {});

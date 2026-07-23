@@ -241,7 +241,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
   );
   const canSubmit = hasCurrentVideo && Boolean(title.trim()) && !isSaving && !isHydrating;
   const disabledReason = !videoInfo?.id
-    ? `Enter a valid ${providerLabels[provider]} link to continue.`
+    ? `Enter a valid ${providerLabels[provider]} link or video ID to continue.`
     : !title.trim()
       ? "Add a title to continue."
       : "Ready to save.";
@@ -257,7 +257,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
     event.preventDefault();
 
     if (!videoInfo?.id || previewSourceKey !== videoSourceKey(provider, url)) {
-      setError(`Enter a valid ${providerLabels[provider]} link.`);
+      setError(`Enter a valid ${providerLabels[provider]} link or video ID.`);
       return;
     }
     if (!title.trim()) {
@@ -357,13 +357,12 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
 
               <Input
                 id="video-url"
-                type="url"
-                inputMode="url"
-                label={`${providerLabels[provider]} URL`}
+                type="text"
+                label={`${providerLabels[provider]} URL or video ID`}
                 value={url}
                 onChange={(event) => changeUrl(event.target.value)}
-                placeholder={provider === "youtube" ? "https://youtube.com/watch?v=…" : "https://vimeo.com/…"}
-                hint={`Paste the public ${providerLabels[provider]} link for this workout.`}
+                placeholder={provider === "youtube" ? "youtube.com/watch?v=… or 11-character ID" : "vimeo.com/… or numeric ID"}
+                hint={`Paste the public ${providerLabels[provider]} link or video ID for this workout.`}
                 required
               />
 
@@ -493,7 +492,7 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
                   <div>
                     <p className="font-semibold text-text">Your preview appears here</p>
                     <p className="mt-1 text-small leading-relaxed text-muted">
-                      Paste a {providerLabels[provider]} link to check the card before saving.
+                      Paste a {providerLabels[provider]} link or video ID to check the card before saving.
                     </p>
                   </div>
                 </div>
