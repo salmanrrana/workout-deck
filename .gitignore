@@ -51,6 +51,7 @@ next-env.d.ts
 *.db-journal
 
 # Brain Dump Ralph runtime artifacts
+plans/prd.json
 plans/archives/
 plans/review-runs/
 plans/ralph*.sh
