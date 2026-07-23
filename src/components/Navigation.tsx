@@ -16,11 +16,8 @@ const navLinks = [
 
 export function Navigation() {
   const pathname = usePathname();
-  const activeIndex = Math.max(
-    0,
-    navLinks.findIndex(({ href }) =>
-      href === "/" ? pathname === href : pathname.startsWith(`${href}/`) || pathname === href,
-    ),
+  const activeIndex = navLinks.findIndex(({ href }) =>
+    href === "/" ? pathname === href : pathname.startsWith(`${href}/`) || pathname === href,
   );
 
   return (
@@ -32,7 +29,7 @@ export function Navigation() {
         <Link
           href="/"
           aria-label="WorkoutDeck home"
-          className="flex min-h-11 shrink-0 items-center rounded-md active:scale-[0.98]"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md active:scale-[0.98]"
         >
           <Logo size={28} withWordmark wordmarkClassName="hidden sm:inline" />
         </Link>
@@ -59,13 +56,15 @@ export function Navigation() {
             );
           })}
 
-          <li
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-0 w-1/4 motion-safe:transition-transform motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)]"
-            style={{ transform: `translateX(${activeIndex * 100}%)` } as CSSProperties}
-          >
-            <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-accent sm:inset-x-4" />
-          </li>
+          {activeIndex >= 0 && (
+            <li
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 left-0 w-1/4 motion-safe:transition-transform motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)]"
+              style={{ transform: `translateX(${activeIndex * 100}%)` } as CSSProperties}
+            >
+              <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-accent sm:inset-x-4" />
+            </li>
+          )}
         </ul>
       </nav>
     </header>
