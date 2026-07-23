@@ -81,6 +81,19 @@ export function VimeoPlayer({
 }: VimeoPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isReady, setIsReady] = useState(false);
+  const onReadyRef = useRef(onReady);
+  const onStateChangeRef = useRef(onStateChange);
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+  const onErrorRef = useRef(onError);
+  const onPlayerRefRef = useRef(onPlayerRef);
+
+  useEffect(() => {
+    onReadyRef.current = onReady;
+    onStateChangeRef.current = onStateChange;
+    onTimeUpdateRef.current = onTimeUpdate;
+    onErrorRef.current = onError;
+    onPlayerRefRef.current = onPlayerRef;
+  }, [onError, onPlayerRef, onReady, onStateChange, onTimeUpdate]);
 
   useEffect(() => {
     let mounted = true;
@@ -112,23 +125,23 @@ export function VimeoPlayer({
           if (!mounted || !apiPlayer) return;
           duration = await apiPlayer.getDuration();
           currentTime = await apiPlayer.getCurrentTime();
-          onPlayerRef?.(handle);
+          onPlayerRefRef.current?.(handle);
           setIsReady(true);
-          onReady?.();
+          onReadyRef.current?.();
         });
-        apiPlayer.on("play", () => onStateChange?.("playing"));
-        apiPlayer.on("pause", () => onStateChange?.("paused"));
-        apiPlayer.on("ended", () => onStateChange?.("ended"));
-        apiPlayer.on("bufferstart", () => onStateChange?.("buffering"));
-        apiPlayer.on("bufferend", () => onStateChange?.("playing"));
+        apiPlayer.on("play", () => onStateChangeRef.current?.("playing"));
+        apiPlayer.on("pause", () => onStateChangeRef.current?.("paused"));
+        apiPlayer.on("ended", () => onStateChangeRef.current?.("ended"));
+        apiPlayer.on("bufferstart", () => onStateChangeRef.current?.("buffering"));
+        apiPlayer.on("bufferend", () => onStateChangeRef.current?.("playing"));
         apiPlayer.on("timeupdate", (data) => {
           currentTime = data?.seconds ?? currentTime;
           duration = data?.duration ?? duration;
-          onTimeUpdate?.(currentTime);
+          onTimeUpdateRef.current?.(currentTime);
         });
       } catch (error) {
         console.error("Failed to initialize Vimeo player:", error);
-        if (mounted) onError?.();
+        if (mounted) onErrorRef.current?.();
       }
     }
 
@@ -138,7 +151,7 @@ export function VimeoPlayer({
       mounted = false;
       if (apiPlayer) void apiPlayer.destroy();
     };
-  }, [onError, onPlayerRef, onReady, onStateChange, onTimeUpdate, videoId]);
+  }, [videoId]);
 
   return (
     <div className={`relative aspect-video ${className}`}>
