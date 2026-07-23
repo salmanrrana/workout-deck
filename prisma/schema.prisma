@@ -13,6 +13,7 @@ datasource db {
 model Video {
   id        String   @id @default(uuid())
   youtubeId String   @unique
+  provider  String   @default("youtube")
   title     String
   tags      String   @default("[]") // JSON array of strings
   notes     String?

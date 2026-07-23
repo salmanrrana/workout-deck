@@ -40,7 +40,7 @@ describe("VideoCard", () => {
         video={{
           ...youtubeVideo,
           id: "video-2",
-          youtubeId: "vimeo:123456",
+          youtubeId: "123456",
           provider: "vimeo",
         }}
       />,

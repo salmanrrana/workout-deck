@@ -13,7 +13,7 @@ interface Video {
   tags: string[];
   notes: string | null;
   createdAt: string;
-  provider?: "youtube" | "vimeo";
+  provider: "youtube" | "vimeo";
 }
 
 export default function VideosPage() {

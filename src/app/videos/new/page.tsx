@@ -130,6 +130,7 @@ export default function AddVideoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           youtubeId: videoInfo.id,
+          provider: "youtube",
           title: title.trim(),
           tags,
           notes: notes.trim() || null,

@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { parseTags, stringifyTags } from "@/lib/types";
 
+const VIDEO_PROVIDERS = ["youtube", "vimeo"] as const;
+type VideoProvider = (typeof VIDEO_PROVIDERS)[number];
+
+function isVideoProvider(value: unknown): value is VideoProvider {
+  return VIDEO_PROVIDERS.includes(value as VideoProvider);
+}
+
 // GET /api/videos - List all videos with optional tag filter
 export async function GET(request: NextRequest) {
   try {
@@ -49,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { youtubeId, title, tags, notes } = body;
+    const { youtubeId, title, tags, notes, provider = "youtube" } = body;
 
     // Validate required fields
     if (!youtubeId || !title) {
@@ -59,14 +66,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if video with this youtubeId already exists
+    if (!isVideoProvider(provider)) {
+      return NextResponse.json(
+        { error: "provider must be either youtube or vimeo" },
+        { status: 400 }
+      );
+    }
+
+    // Check if video with this external ID already exists
     const existing = await prisma.video.findUnique({
       where: { youtubeId },
     });
 
     if (existing) {
       return NextResponse.json(
-        { error: "A video with this YouTube ID already exists" },
+        { error: "A video with this provider ID already exists" },
         { status: 409 }
       );
     }
@@ -74,6 +88,7 @@ export async function POST(request: NextRequest) {
     const video = await prisma.video.create({
       data: {
         youtubeId,
+        provider,
         title,
         tags: stringifyTags(tags || []),
         notes: notes || null,

@@ -14,19 +14,12 @@ interface Video {
   tags: string[];
   notes: string | null;
   createdAt: string;
-  provider?: "youtube" | "vimeo";
+  provider: "youtube" | "vimeo";
 }
 
 interface VideoCardProps {
   video: Video;
   onDelete?: (id: string) => void;
-}
-
-function getProvider(video: Video): "youtube" | "vimeo" {
-  if (video.provider) return video.provider;
-  return /^(vimeo:|https?:\/\/(?:www\.)?vimeo\.com)/i.test(video.youtubeId)
-    ? "vimeo"
-    : "youtube";
 }
 
 export function VideoCard({ video, onDelete }: VideoCardProps) {
@@ -36,9 +29,8 @@ export function VideoCard({ video, onDelete }: VideoCardProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const provider = getProvider(video);
   const thumbnailUrl =
-    provider === "youtube"
+    video.provider === "youtube"
       ? `https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`
       : null;
 
@@ -103,7 +95,7 @@ export function VideoCard({ video, onDelete }: VideoCardProps) {
             size="sm"
             className="absolute left-3 top-3 bg-surface-1 text-text [box-shadow:var(--shadow-card)] hover:bg-surface-1 hover:text-text"
           >
-            {provider === "vimeo" ? "Vimeo" : "YouTube"}
+            {video.provider === "vimeo" ? "Vimeo" : "YouTube"}
           </Chip>
         </div>
 
