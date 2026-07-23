@@ -2,6 +2,10 @@ import { spawn } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const args = process.argv.slice(2);
+if (args[0] === "--") {
+  args.shift();
+}
+
 const portFlagIndex = args.findIndex(
   (argument) => argument === "--port" || argument.startsWith("--port="),
 );
