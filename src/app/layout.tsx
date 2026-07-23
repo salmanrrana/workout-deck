@@ -21,8 +21,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({
@@ -35,8 +33,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-bg-base text-text`}
       >
+        <a
+          href="#main-content"
+          className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-md bg-accent px-4 py-3 font-semibold text-accent-fg focus-visible:translate-y-0 motion-safe:transition-transform motion-safe:[transition-duration:var(--dur)]"
+        >
+          Skip to main content
+        </a>
         <Navigation />
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
+        >
           {children}
         </main>
       </body>

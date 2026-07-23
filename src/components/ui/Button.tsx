@@ -17,7 +17,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: "bg-accent text-accent-fg hover:bg-accent-strong active:bg-accent-strong",
   secondary: "border border-border bg-surface-2 text-text hover:bg-surface-3 active:bg-surface-3",
   ghost: "bg-transparent text-muted hover:bg-surface-2 hover:text-text active:bg-surface-2",
-  danger: "bg-danger/10 text-danger hover:bg-danger hover:text-text active:bg-danger active:text-text",
+  danger: "bg-danger/5 text-danger hover:bg-danger hover:text-bg-base active:bg-danger active:text-bg-base",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

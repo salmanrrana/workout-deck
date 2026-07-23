@@ -382,7 +382,14 @@ export default function TimerPage() {
           </div>
 
           <div className="w-full max-w-3xl">
-            <div className="mb-5 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${timer.rounds}, minmax(0, 1fr))` }} aria-label={`Round ${timer.round} of ${timer.rounds}`}>
+            <div
+              className="mb-5 grid"
+              style={{
+                columnGap: timer.rounds > 48 ? "1px" : timer.rounds > 24 ? "3px" : "6px",
+                gridTemplateColumns: `repeat(${timer.rounds}, minmax(0, 1fr))`,
+              }}
+              aria-label={`Round ${timer.round} of ${timer.rounds}`}
+            >
               {Array.from({ length: timer.rounds }, (_, index) => {
                 const round = index + 1;
                 const complete = round < timer.round || timer.phase === "complete";
@@ -486,7 +493,7 @@ export default function TimerPage() {
                 {formatSeconds(config.work * config.rounds + config.rest * Math.max(0, config.rounds - 1))}
               </strong>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-faint">Audio cues and screen wake lock activate when supported.</p>
+            <p className="mt-2 text-xs leading-relaxed text-muted">Audio cues and screen wake lock activate when supported.</p>
           </div>
         </Card>
       </div>

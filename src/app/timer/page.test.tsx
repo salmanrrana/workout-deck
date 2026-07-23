@@ -24,6 +24,9 @@ describe("Interval Timer", () => {
     expect(screen.getByRole("button", { name: "Start timer" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Reset" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Skip interval" })).toBeTruthy();
+    const phaseAnnouncement = screen.getByText("READY. Round 1 of 6");
+    expect(phaseAnnouncement.getAttribute("aria-live")).toBe("polite");
+    expect(phaseAnnouncement.getAttribute("aria-atomic")).toBe("true");
     expect(screen.getByLabelText("Work seconds").getAttribute("value")).toBe("40");
     expect(screen.getByLabelText("Rest seconds").getAttribute("value")).toBe("20");
     expect(screen.getByLabelText("Rounds").getAttribute("value")).toBe("6");

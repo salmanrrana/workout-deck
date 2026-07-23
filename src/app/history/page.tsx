@@ -114,7 +114,7 @@ export default function HistoryPage() {
       )}
 
       {!isLoading && !error && logs.length > 0 && (
-        <main className="mt-8 space-y-10 sm:mt-10 sm:space-y-12">
+        <div className="mt-8 space-y-10 sm:mt-10 sm:space-y-12">
           <section aria-label="Workout summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
             <Stat label="Current streak" value={`${history.streak}`} suffix={history.streak === 1 ? "day" : "days"} icon={<FlameIcon />} />
             <Stat label="This week" value={`${history.thisWeek}`} suffix={history.thisWeek === 1 ? "workout" : "workouts"} />
@@ -171,7 +171,7 @@ export default function HistoryPage() {
               ))}
             </div>
           </section>
-        </main>
+        </div>
       )}
     </div>
   );

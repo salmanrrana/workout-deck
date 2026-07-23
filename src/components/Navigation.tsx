@@ -29,7 +29,7 @@ export function Navigation() {
         <Link
           href="/"
           aria-label="WorkoutDeck home"
-          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md active:scale-[0.98]"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md motion-safe:active:scale-[0.98]"
         >
           <Logo size={28} withWordmark wordmarkClassName="hidden sm:inline" />
         </Link>
@@ -43,7 +43,7 @@ export function Navigation() {
                 <Link
                   href={href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`relative z-10 flex min-h-11 items-center justify-center gap-2 rounded-md px-2 text-small font-semibold active:scale-[0.98] motion-safe:transition-colors motion-safe:[transition-duration:var(--dur)] ${
+                  className={`relative z-10 flex min-h-11 items-center justify-center gap-2 rounded-md px-2 text-small font-semibold motion-safe:active:scale-[0.98] motion-safe:transition-colors motion-safe:[transition-duration:var(--dur)] ${
                     isActive
                       ? "bg-accent/10 text-accent"
                       : "text-muted hover:bg-surface-2 hover:text-text"

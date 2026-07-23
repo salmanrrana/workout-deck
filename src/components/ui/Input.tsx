@@ -33,7 +33,7 @@ export interface InputProps
 }
 
 const fieldClasses =
-  "w-full rounded-md bg-surface-2 text-text placeholder:text-faint outline-none ring-1 ring-border transition focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-md bg-surface-2 text-text placeholder:text-muted outline-none ring-1 ring-border motion-safe:transition focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50";
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { className = "", error, hint, id, label, leadingIcon, required, ...props },

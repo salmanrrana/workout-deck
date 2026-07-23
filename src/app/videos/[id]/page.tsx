@@ -397,7 +397,7 @@ export default function VideoPlayerPage({
                               : "text-muted hover:bg-surface-2 hover:text-text"
                           }`}
                         >
-                          <span className="shrink-0 font-mono text-xs tabular-nums text-faint">
+                          <span className="shrink-0 font-mono text-xs tabular-nums text-muted">
                             {formatTime(cue.timestamp)}
                           </span>
                           <span className="text-small font-medium">{cue.exerciseName}</span>

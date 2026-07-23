@@ -222,18 +222,21 @@ export function CueEditor({
 
       {/* Add new cue */}
       <div className="space-y-2">
+        <label htmlFor="new-cue-exercise" className="sr-only">Exercise name</label>
         <input
+          id="new-cue-exercise"
           type="text"
           value={exerciseName}
           onChange={(e) => setExerciseName(e.target.value)}
           placeholder="Exercise name"
-          className="min-h-11 w-full rounded-md bg-surface-1 px-3 py-2 text-small text-text placeholder:text-faint"
+          className="min-h-11 w-full rounded-md bg-surface-1 px-3 py-2 text-small text-text placeholder:text-muted"
           onKeyDown={(e) => {
             if (e.key === "Enter" && exerciseName.trim()) handleQuickAdd();
           }}
         />
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <button
+            type="button"
             onClick={handleQuickAdd}
             disabled={saving || !exerciseName.trim()}
             className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-md bg-accent px-3 py-2 text-small font-semibold text-accent-fg motion-safe:transition motion-safe:active:scale-[0.98] hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
@@ -242,19 +245,22 @@ export function CueEditor({
             Add at {formatTime(Math.floor(currentTime))}
           </button>
           <div className="flex items-center gap-1">
+            <label htmlFor="new-cue-timestamp" className="sr-only">Cue timestamp</label>
             <input
+              id="new-cue-timestamp"
               type="text"
               value={timestamp}
               onChange={(e) => setTimestamp(e.target.value)}
               placeholder="m:ss"
-              className="min-h-11 w-16 rounded-md bg-surface-1 px-2 py-2 text-center text-small text-text placeholder:text-faint"
+              className="min-h-11 min-w-0 flex-1 rounded-md bg-surface-1 px-2 py-2 text-center text-small text-text placeholder:text-muted sm:w-16 sm:flex-none"
             />
             <button
+              type="button"
               onClick={handleManualAdd}
               disabled={saving || !exerciseName.trim() || !timestamp}
               className="flex min-h-11 items-center justify-center rounded-md border border-border bg-surface-1 px-3 py-2 text-small font-semibold text-text motion-safe:transition motion-safe:active:scale-[0.98] hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Add
+              Add at timestamp
             </button>
           </div>
         </div>
@@ -271,13 +277,17 @@ export function CueEditor({
             <div key={cue.id} className="flex items-center gap-1">
               {editingId === cue.id ? (
                 <>
+                  <label htmlFor={`cue-${cue.id}-timestamp`} className="sr-only">Timestamp for {cue.exerciseName}</label>
                   <input
+                    id={`cue-${cue.id}-timestamp`}
                     type="text"
                     value={editTimestamp}
                     onChange={(e) => setEditTimestamp(e.target.value)}
                     className="min-h-11 w-16 rounded-md bg-surface-1 px-2 py-1 text-center font-mono text-xs tabular-nums text-text"
                   />
+                  <label htmlFor={`cue-${cue.id}-name`} className="sr-only">Exercise name for cue {idx + 1}</label>
                   <input
+                    id={`cue-${cue.id}-name`}
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
@@ -306,7 +316,7 @@ export function CueEditor({
                 </>
               ) : (
                 <>
-                  <span className="w-14 shrink-0 text-center font-mono text-xs tabular-nums text-faint">
+                  <span className="w-14 shrink-0 text-center font-mono text-xs tabular-nums text-muted">
                     {formatTime(cue.timestamp)}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-small text-muted">

@@ -103,7 +103,7 @@ export function ExerciseCueOverlay({
                   {cue.order}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-small font-medium">{cue.exerciseName}</span>
-                <span className="font-mono text-xs tabular-nums text-faint">{formatTime(cue.timestamp)}</span>
+                <span className="font-mono text-xs tabular-nums text-muted">{formatTime(cue.timestamp)}</span>
               </button>
             ))}
           </div>
