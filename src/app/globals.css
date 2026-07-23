@@ -1,19 +1,95 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* Dark-only foundation. A future light theme can replace this token block. */
+  --bg-base: #0B0C0E;
+  --surface-1: #131518;
+  --surface-2: #1B1E22;
+  --surface-3: #23272C;
+  --border: #2A2F36;
+  --border-strong: #3A4048;
+  --text: #F2F4F5;
+  --text-muted: #A7B0B8;
+  --text-faint: #6B747C;
+  --accent: #38E07B;
+  --accent-strong: #16C060;
+  --accent-fg: #05210F;
+  --accent-glow: rgba(56,224,123,0.35);
+  --work: #38E07B;
+  --rest: #38BDF8;
+  --paused: #FBBF24;
+  --danger: #F4515B;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-full: 9999px;
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -16px rgba(0,0,0,0.7);
+  --shadow-pop: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 50px -20px rgba(0,0,0,0.8);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 320ms;
+  --ease: cubic-bezier(0.2,0.8,0.2,1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg-base: var(--bg-base);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-fg: var(--accent-fg);
+  --color-work: var(--work);
+  --color-rest: var(--rest);
+  --color-paused: var(--paused);
+  --color-danger: var(--danger);
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-full: var(--r-full);
+  --text-display-hero: clamp(4rem, 18vw, 11rem);
+  --text-display-hero--line-height: 0.95;
+  --text-display-hero--letter-spacing: -0.03em;
+  --text-display-xl: 2.5rem;
+  --text-display-xl--line-height: 1.05;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-h1: 2rem;
+  --text-h1--line-height: 1.1;
+  --text-h2: 1.5rem;
+  --text-h2--line-height: 1.15;
+  --text-h3: 1.25rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-small: 0.875rem;
+  --text-xs: 0.75rem;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-base);
+  color: var(--text);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+:where(a,button,input,textarea,select,[tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent-glow);
+}
+
+.text-label {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }

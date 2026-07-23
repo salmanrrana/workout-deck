@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-bg-base text-text`}
       >
         <Navigation />
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
