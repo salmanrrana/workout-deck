@@ -83,4 +83,17 @@ describe("UI primitives", () => {
     expect(link.getAttribute("role")).toBeNull();
     expect(link.getAttribute("tabindex")).toBeNull();
   });
+
+  it("restricts Card hosts to semantic combinations", () => {
+    const Wrapper = (props: React.ComponentPropsWithoutRef<"div">) => <div {...props} />;
+
+    // @ts-expect-error Custom hosts cannot guarantee the rendered element's semantics.
+    const customHost = <Card as={Wrapper} interactive onClick={() => undefined}>Custom</Card>;
+    // @ts-expect-error Native activating hosts must opt into interactive styling.
+    const staticLink = <Card as="a" href="/videos">Videos</Card>;
+    // @ts-expect-error Native activating hosts must opt into interactive styling.
+    const staticButton = <Card as="button" type="button">Start</Card>;
+
+    expect([customHost, staticLink, staticButton]).toHaveLength(3);
+  });
 });

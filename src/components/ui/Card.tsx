@@ -13,6 +13,8 @@ type CardVisualProps = {
 };
 
 type NativeInteractiveTag = "a" | "button";
+type StaticCardTag = Exclude<keyof HTMLElementTagNameMap, NativeInteractiveTag>;
+type CardTag = StaticCardTag | NativeInteractiveTag;
 
 type OmitCardKeys =
   | keyof CardVisualProps
@@ -25,7 +27,7 @@ type OmitCardKeys =
   | "style";
 
 /** Non-interactive surface — no activation semantics. */
-export type CardStaticProps<T extends ElementType = "div"> = CardVisualProps & {
+export type CardStaticProps<T extends StaticCardTag = "div"> = CardVisualProps & {
   as?: T;
   interactive?: false;
   onClick?: never;
@@ -35,30 +37,26 @@ export type CardStaticProps<T extends ElementType = "div"> = CardVisualProps & {
  * Clickable non-native host. `interactive` and `onClick` are required together so
  * the card always receives keyboard activation + the F1 focus ring.
  */
-export type CardActionProps = CardVisualProps & {
-  as?: Exclude<keyof HTMLElementTagNameMap, NativeInteractiveTag>;
+export type CardActionProps<T extends StaticCardTag = "div"> = CardVisualProps & {
+  as?: T;
   interactive: true;
   onClick: MouseEventHandler<HTMLElement>;
-} & Omit<ComponentPropsWithoutRef<"div">, OmitCardKeys>;
+} & Omit<ComponentPropsWithoutRef<T>, OmitCardKeys>;
 
 /**
- * Visually interactive host that is already keyboard-accessible
- * (`a` / `button`, or a custom Link-like component).
+ * Visually interactive host that is already keyboard-accessible (`a` / `button`).
  */
-export type CardNativeInteractiveProps<T extends ElementType> = CardVisualProps & {
+export type CardNativeInteractiveProps<T extends NativeInteractiveTag> = CardVisualProps & {
   as: T;
   interactive: true;
   onClick?: ComponentPropsWithoutRef<T>["onClick"];
 } & Omit<ComponentPropsWithoutRef<T>, OmitCardKeys>;
 
-export type CardProps<T extends ElementType = "div"> =
-  | CardStaticProps<T>
-  | CardActionProps
-  | (T extends NativeInteractiveTag
-      ? CardNativeInteractiveProps<T>
-      : T extends string
-        ? never
-        : CardNativeInteractiveProps<T>);
+export type CardProps<T extends CardTag = "div"> = T extends NativeInteractiveTag
+  ? CardNativeInteractiveProps<T>
+  : T extends StaticCardTag
+    ? CardStaticProps<T> | CardActionProps<T>
+    : never;
 
 const paddingClasses = {
   none: "",
@@ -80,7 +78,7 @@ type CardRuntimeProps = CardVisualProps & {
   style?: CSSProperties;
 };
 
-export function Card<T extends ElementType = "div">(props: CardProps<T>) {
+export function Card<T extends CardTag = "div">(props: CardProps<T>) {
   const {
     as,
     bordered = false,
@@ -99,7 +97,6 @@ export function Card<T extends ElementType = "div">(props: CardProps<T>) {
   const nativelyInteractive =
     typeof Component === "string" && NATIVE_INTERACTIVE.has(Component);
   // Tie keyboard semantics to actual activation (onClick), not the visual `interactive` flag alone.
-  // Custom components (e.g. Next.js Link) are assumed to render a native interactive host.
   const needsActivationShim =
     typeof onClick === "function" &&
     typeof Component === "string" &&
