@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: "i.ytimg.com",
         pathname: "/vi/**",
       },
+      {
+        protocol: "https",
+        hostname: "i.vimeocdn.com",
+        pathname: "/**",
+      },
     ],
   },
 };
