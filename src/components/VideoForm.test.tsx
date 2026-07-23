@@ -43,6 +43,7 @@ describe("VideoForm", () => {
     });
 
     render(<VideoForm mode="create" />);
+    expect(screen.getByRole("complementary", { name: "Video preview" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add to deck" }).hasAttribute("disabled")).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: "Vimeo" }));

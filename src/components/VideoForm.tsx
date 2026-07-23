@@ -478,8 +478,8 @@ export function VideoForm({ mode, videoId }: VideoFormProps) {
           )}
         </Card>
 
-        <aside className="space-y-4 lg:sticky lg:top-20">
-          <Card as="section" padding="none" className="overflow-hidden" aria-label="Video preview">
+        <aside aria-label="Video preview" className="space-y-4 lg:sticky lg:top-20">
+          <Card as="section" padding="none" className="overflow-hidden">
             <div className="relative aspect-video bg-surface-2">
               {isFetching ? (
                 <div role="status" aria-label={`Fetching ${providerLabels[provider]} preview`} className="absolute inset-0">
