@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Card, IconButton } from "@/components/ui";
 import type { ExerciseCue } from "@/lib/types";
 import { formatTime } from "@/lib/types";
 
@@ -21,121 +22,101 @@ export function ExerciseCueOverlay({
 
   if (!cues.length) return null;
 
-  // Find next 1-2 cues after the active one
-  const activeIndex = activeCue
-    ? cues.findIndex((c) => c.id === activeCue.id)
-    : -1;
+  const activeIndex = activeCue ? cues.findIndex((cue) => cue.id === activeCue.id) : -1;
   const upcomingCues = cues
     .slice(activeIndex + 1)
     .filter((cue) => cue.timestamp > currentTime)
     .slice(0, 2);
 
+  if (!visible) {
+    return (
+      <Card className="flex min-h-14 items-center justify-between gap-4 px-4 py-2">
+        <p className="text-small text-muted">Exercise cue hidden</p>
+        <IconButton
+          onClick={() => setVisible(true)}
+          variant="ghost"
+          aria-label="Show exercise overlay"
+        >
+          <EyeOffIcon className="h-5 w-5" />
+        </IconButton>
+      </Card>
+    );
+  }
+
   return (
-    <div className="relative">
-      {/* Toggle button */}
-      <button
-        onClick={() => setVisible((v) => !v)}
-        className="absolute right-2 top-2 z-10 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-zinc-800/80 px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-700/80"
-        aria-label={visible ? "Hide exercise overlay" : "Show exercise overlay"}
+    <Card
+      as="section"
+      aria-label="Current exercise cue"
+      padding="none"
+      className="relative overflow-hidden bg-surface-1"
+    >
+      <div className="absolute right-3 top-3 z-10">
+        <IconButton
+          onClick={() => setVisible(false)}
+          variant="ghost"
+          aria-label="Hide exercise overlay"
+        >
+          <EyeIcon className="h-5 w-5" />
+        </IconButton>
+      </div>
+
+      <div
+        key={activeCue?.id ?? "waiting"}
+        className="min-h-32 px-5 py-6 pr-16 sm:flex sm:items-center sm:gap-5 sm:px-6"
+        aria-live="polite"
       >
-        {visible ? (
-          <EyeIcon className="h-4 w-4" />
-        ) : (
-          <EyeOffIcon className="h-4 w-4" />
-        )}
-      </button>
-
-      {visible ? (
-        <div className="rounded-xl bg-zinc-900/90 p-5 backdrop-blur-sm">
-          {/* Active cue - large, high-contrast display */}
-          {activeCue ? (
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-600 shadow-lg shadow-green-600/20">
-                <span className="text-lg font-bold text-white">
-                  {activeCue.order}
-                </span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-2xl font-extrabold tracking-tight text-white">
-                  {activeCue.exerciseName}
-                </p>
-                <p className="mt-0.5 text-sm text-zinc-400">
-                  Since {formatTime(activeCue.timestamp)}
-                </p>
-              </div>
+        {activeCue ? (
+          <>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-accent font-mono text-h2 font-bold tabular-nums text-accent-fg [box-shadow:0_10px_30px_-14px_var(--accent)]">
+              {activeCue.order}
             </div>
-          ) : (
-            <p className="py-2 text-center text-sm text-zinc-500">
-              Waiting for first exercise cue...
-            </p>
-          )}
-
-          {/* Upcoming cues - smaller text */}
-          {upcomingCues.length > 0 && (
-            <div className="mt-4 space-y-1 border-t border-zinc-800 pt-3">
-              <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                Up next
+            <div className="mt-4 min-w-0 sm:mt-0">
+              <p className="text-label">Current exercise</p>
+              <p className="mt-1 text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold leading-none tracking-[-0.03em] text-text">
+                {activeCue.exerciseName}
               </p>
-              {upcomingCues.map((cue) => (
-                <button
-                  key={cue.id}
-                  onClick={() => onSeek(cue.timestamp)}
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-zinc-800/70"
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-medium text-zinc-300">
-                    {cue.order}
-                  </span>
-                  <span className="text-sm text-zinc-300">
-                    {cue.exerciseName}
-                  </span>
-                  <span className="ml-auto font-mono text-xs text-zinc-500">
-                    {formatTime(cue.timestamp)}
-                  </span>
-                </button>
-              ))}
+              <p className="mt-2 font-mono text-small tabular-nums text-muted">
+                Active since {formatTime(activeCue.timestamp)}
+              </p>
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="rounded-xl bg-zinc-900/60 px-4 py-3 backdrop-blur-sm">
-          <p className="text-center text-sm text-zinc-500">
-            Overlay hidden
-          </p>
+          </>
+        ) : (
+          <div>
+            <p className="text-label">Current exercise</p>
+            <p className="mt-2 text-h2 font-bold text-text">Get ready</p>
+            <p className="mt-1 text-small text-muted">The first cue will appear as the video reaches it.</p>
+          </div>
+        )}
+      </div>
+
+      {upcomingCues.length > 0 && (
+        <div className="border-t border-border bg-surface-2/50 px-3 py-3 sm:px-4">
+          <p className="text-label px-2">Up next</p>
+          <div className="mt-1 grid gap-1 sm:grid-cols-2">
+            {upcomingCues.map((cue) => (
+              <button
+                key={cue.id}
+                onClick={() => onSeek(cue.timestamp)}
+                className="flex min-h-11 w-full items-center gap-3 rounded-md px-2 text-left text-muted motion-safe:transition-colors hover:bg-surface-3 hover:text-text active:bg-surface-3"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-xs font-semibold text-text">
+                  {cue.order}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-small font-medium">{cue.exerciseName}</span>
+                <span className="font-mono text-xs tabular-nums text-faint">{formatTime(cue.timestamp)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
 function EyeIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
-      <path
-        fillRule="evenodd"
-        d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fillRule="evenodd" d="M1.32 11.45C2.81 6.98 7.03 3.75 12 3.75s9.18 3.22 10.68 7.69c.12.36.12.75 0 1.11-1.49 4.47-5.71 7.7-10.68 7.7S2.81 19.03 1.32 12.56a1.76 1.76 0 010-1.11zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clipRule="evenodd" /></svg>;
 }
 
 function EyeOffIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" />
-      <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0115.75 12zM12.53 15.713l-4.243-4.244a3.75 3.75 0 004.243 4.243z" />
-      <path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 00-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 016.75 12z" />
-    </svg>
-  );
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.68 12.55a11.25 11.25 0 01-2.63 4.31l-3.1-3.1a5.25 5.25 0 00-6.71-6.71L7.76 4.58A11.22 11.22 0 0112 3.75c4.97 0 9.19 3.22 10.68 7.69.12.36.12.75 0 1.11zM6.75 12c0-.62.11-1.21.3-1.76l-3.1-3.1a11.25 11.25 0 00-2.63 4.31c-.12.36-.12.75 0 1.11 1.49 4.47 5.71 7.69 10.68 7.69 1.5 0 2.93-.29 4.24-.83l-2.48-2.47A5.25 5.25 0 016.75 12z" /></svg>;
 }

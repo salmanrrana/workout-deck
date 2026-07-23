@@ -1,36 +1,72 @@
 "use client";
 
+/*
+THESIS: A workout cockpit makes playback state, elapsed time, and the next physical action obvious; it refuses the equal-weight developer control stack.
+OWN-WORLD: Graphite instrument surfaces, one green GO signal, semantic amber/red states, large mono measurement, and tactile tokenized controls.
+STORY: See the exercise, read time and state at a glance, control playback, then log the effort; cue maintenance stays secondary.
+FIRST VIEWPORT: A dominant 16:9 player sits left while a compact instrument rail puts elapsed time above transport and logging on the right.
+FORM: Precision brief, cockpit hierarchy; concept seed not applicable because structure and visual system were explicitly pinned.
+*/
+
 import { useState, useEffect, useCallback, useRef, use } from "react";
 import Link from "next/link";
 import { YouTubePlayer, useYouTubePlayer } from "@/components/YouTubePlayer";
 import type { PlayerState } from "@/components/YouTubePlayer";
+import { VimeoPlayer } from "@/components/VimeoPlayer";
 import { ExerciseCueOverlay } from "@/components/ExerciseCueOverlay";
 import { CueEditor } from "@/components/CueEditor";
 import { AutoExtractButton } from "@/components/AutoExtractButton";
+import { Button, Card, Chip, EmptyState, IconButton, Spinner } from "@/components/ui";
 import type { ExerciseCue } from "@/lib/types";
 import { formatTime } from "@/lib/types";
+
+type VideoProvider = "youtube" | "vimeo";
 
 interface Video {
   id: string;
   youtubeId: string;
+  provider?: VideoProvider;
   title: string;
   tags: string[];
   notes: string | null;
   cues: ExerciseCue[];
 }
 
-function stateColor(state: PlayerState): string {
-  switch (state) {
-    case "playing":
-      return "bg-green-500";
-    case "paused":
-      return "bg-yellow-500";
-    case "ended":
-      return "bg-red-500";
-    default:
-      return "bg-zinc-500";
-  }
-}
+const statusPresentation: Record<
+  PlayerState,
+  { label: string; className: string; dotClassName: string }
+> = {
+  playing: {
+    label: "Playing",
+    className: "bg-accent/15 text-accent",
+    dotClassName: "bg-accent",
+  },
+  paused: {
+    label: "Paused",
+    className: "bg-paused/15 text-paused",
+    dotClassName: "bg-paused",
+  },
+  ended: {
+    label: "Ended",
+    className: "bg-danger/15 text-danger",
+    dotClassName: "bg-danger",
+  },
+  buffering: {
+    label: "Loading",
+    className: "bg-surface-2 text-muted",
+    dotClassName: "bg-muted motion-safe:animate-pulse",
+  },
+  unstarted: {
+    label: "Ready",
+    className: "bg-surface-2 text-muted",
+    dotClassName: "bg-muted",
+  },
+  cued: {
+    label: "Ready",
+    className: "bg-surface-2 text-muted",
+    dotClassName: "bg-muted",
+  },
+};
 
 export default function VideoPlayerPage({
   params,
@@ -41,6 +77,7 @@ export default function VideoPlayerPage({
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [playerError, setPlayerError] = useState<string | null>(null);
   const [activeCue, setActiveCue] = useState<ExerciseCue | null>(null);
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState(false);
@@ -48,17 +85,18 @@ export default function VideoPlayerPage({
   const [workoutStartTime, setWorkoutStartTime] = useState<number | null>(null);
 
   const player = useYouTubePlayer();
+  const updatePlayerState = player.handlers.onStateChange;
+  const updatePlayerTime = player.handlers.onTimeUpdate;
+  const handlePlayerReady = player.handlers.onReady;
   const prevCueRef = useRef<string | null>(null);
   const logTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup setTimeout on unmount
   useEffect(() => {
     return () => {
       if (logTimeoutRef.current) clearTimeout(logTimeoutRef.current);
     };
   }, []);
 
-  // Fetch video data
   useEffect(() => {
     async function fetchVideo() {
       try {
@@ -68,47 +106,39 @@ export default function VideoPlayerPage({
           return;
         }
         const data = await res.json();
-        // Normalize cues to array and sort by timestamp for correct overlay syncing
         data.cues = Array.isArray(data.cues)
           ? data.cues.sort((a: ExerciseCue, b: ExerciseCue) => a.timestamp - b.timestamp)
           : [];
         setVideo(data);
-      } catch (err) {
-        console.error("Failed to load video:", err);
+      } catch (fetchError) {
+        console.error("Failed to load video:", fetchError);
         setError("Failed to load video");
       } finally {
         setIsLoading(false);
       }
     }
-    fetchVideo();
+    void fetchVideo();
   }, [id]);
 
-  // Track workout start time
   const handleStateChange = useCallback(
     (state: PlayerState) => {
-      player.handlers.onStateChange(state);
-      if (state === "playing" && workoutStartTime === null) {
-        setWorkoutStartTime(Date.now());
+      updatePlayerState(state);
+      if (state === "playing") {
+        setWorkoutStartTime((startedAt) => startedAt ?? Date.now());
       }
     },
-    [player.handlers, workoutStartTime]
+    [updatePlayerState],
   );
 
-  // Sync exercise cues with playback time
   const handleTimeUpdate = useCallback(
     (time: number) => {
-      player.handlers.onTimeUpdate(time);
-
+      updatePlayerTime(time);
       if (!video?.cues.length) return;
 
-      // Find the active cue: the most recent cue whose timestamp <= current time
       let current: ExerciseCue | null = null;
       for (const cue of video.cues) {
-        if (cue.timestamp <= time) {
-          current = cue;
-        } else {
-          break; // cues are sorted by order/timestamp
-        }
+        if (cue.timestamp <= time) current = cue;
+        else break;
       }
 
       if (current?.id !== prevCueRef.current) {
@@ -116,18 +146,17 @@ export default function VideoPlayerPage({
         setActiveCue(current);
       }
     },
-    [player.handlers, video?.cues]
+    [updatePlayerTime, video?.cues],
   );
 
-  // Update cues when edited
-  const handleCuesChange = useCallback(
-    (newCues: ExerciseCue[]) => {
-      setVideo((prev) => (prev ? { ...prev, cues: newCues } : prev));
-    },
-    []
-  );
+  const handlePlayerError = useCallback(() => {
+    setPlayerError("The video player could not start. Reload the page to try again.");
+  }, []);
 
-  // Log workout
+  const handleCuesChange = useCallback((newCues: ExerciseCue[]) => {
+    setVideo((previous) => (previous ? { ...previous, cues: newCues } : previous));
+  }, []);
+
   const handleLogWorkout = async () => {
     if (!video || isLogging) return;
     setIsLogging(true);
@@ -136,14 +165,10 @@ export default function VideoPlayerPage({
       const duration = workoutStartTime
         ? Math.floor((Date.now() - workoutStartTime) / 1000)
         : Math.floor(player.currentTime);
-
       const res = await fetch("/api/workout-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videoId: video.id,
-          duration,
-        }),
+        body: JSON.stringify({ videoId: video.id, duration }),
       });
 
       if (res.ok) {
@@ -151,11 +176,11 @@ export default function VideoPlayerPage({
         if (logTimeoutRef.current) clearTimeout(logTimeoutRef.current);
         logTimeoutRef.current = setTimeout(() => setLogSuccess(false), 3000);
       } else {
-        setLogError("Failed to log workout. Please try again.");
+        setLogError("Workout was not logged. Try again.");
       }
-    } catch (err) {
-      console.error("Failed to log workout:", err);
-      setLogError("Network error. Check your connection and try again.");
+    } catch (logWorkoutError) {
+      console.error("Failed to log workout:", logWorkoutError);
+      setLogError("Connection lost. Check your network and try again.");
     } finally {
       setIsLogging(false);
     }
@@ -163,51 +188,70 @@ export default function VideoPlayerPage({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-green-500" />
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Spinner size="lg" label="Loading workout" />
       </div>
     );
   }
 
   if (error || !video) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-lg text-zinc-400">{error || "Video not found"}</p>
-        <Link
-          href="/videos"
-          className="mt-4 inline-block text-green-500 underline hover:text-green-400"
-        >
-          Back to library
-        </Link>
+      <div className="py-12">
+        <EmptyState
+          title={error || "Video not found"}
+          description="Return to your deck and choose another workout."
+          action={
+            <Link
+              href="/videos"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-accent px-4 font-semibold text-accent-fg motion-safe:transition motion-safe:active:scale-[0.98]"
+            >
+              Back to library
+            </Link>
+          }
+        />
       </div>
     );
   }
 
+  const provider: VideoProvider = video.provider === "vimeo" ? "vimeo" : "youtube";
+  const status = statusPresentation[player.state];
+  const progress = player.duration > 0
+    ? Math.min(100, Math.max(0, (player.currentTime / player.duration) * 100))
+    : 0;
+  const sharedPlayerProps = {
+    videoId: video.youtubeId,
+    onReady: handlePlayerReady,
+    onStateChange: handleStateChange,
+    onTimeUpdate: handleTimeUpdate,
+    onPlayerRef: player.registerPlayer,
+    onError: handlePlayerError,
+    className: "w-full overflow-hidden rounded-lg bg-surface-1 [box-shadow:var(--shadow-card)]",
+  };
+
   return (
-    <div className="py-4 lg:py-8">
-      {/* Back link */}
+    <div className="py-2 lg:py-6">
       <Link
         href="/videos"
-        className="mb-4 inline-flex min-h-[44px] items-center gap-1 text-zinc-400 transition-colors hover:text-white"
+        className="mb-4 inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-small font-medium text-muted motion-safe:transition-colors hover:bg-surface-2 hover:text-text active:bg-surface-3"
       >
         <ChevronLeftIcon className="h-5 w-5" />
         Back to library
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        {/* Left column: Player + Info */}
-        <div className="space-y-4">
-          {/* YouTube Player */}
-          <YouTubePlayer
-            videoId={video.youtubeId}
-            onReady={player.handlers.onReady}
-            onStateChange={handleStateChange}
-            onTimeUpdate={handleTimeUpdate}
-            onPlayerRef={player.registerPlayer}
-            className="w-full overflow-hidden rounded-xl"
-          />
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22.5rem] xl:gap-7">
+        <section aria-label="Workout video" className="min-w-0 space-y-4">
+          {provider === "vimeo" ? (
+            <VimeoPlayer {...sharedPlayerProps} />
+          ) : (
+            <YouTubePlayer {...sharedPlayerProps} />
+          )}
 
-          {/* Exercise Cue Overlay */}
+          {playerError && (
+            <p role="alert" className="rounded-md bg-danger/10 px-4 py-3 text-small text-danger">
+              {playerError}
+            </p>
+          )}
+
           <ExerciseCueOverlay
             activeCue={activeCue}
             cues={video.cues}
@@ -215,277 +259,186 @@ export default function VideoPlayerPage({
             onSeek={player.seekTo}
           />
 
-          {/* Video Info */}
-          <div className="rounded-xl bg-zinc-900 p-4">
-            <h1 className="text-xl font-bold sm:text-2xl">{video.title}</h1>
+          <Card as="section" padding="lg" className="overflow-hidden">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-label">Now training</p>
+                <h1 className="mt-2 text-h2 font-bold tracking-tight text-text sm:text-h1">
+                  {video.title}
+                </h1>
+              </div>
+              <Chip variant="neutral" size="sm">
+                {provider === "vimeo" ? "Vimeo" : "YouTube"}
+              </Chip>
+            </div>
             {video.tags.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {video.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400"
-                  >
-                    {tag}
-                  </span>
+                  <Chip key={tag} variant="neutral" size="sm">{tag}</Chip>
                 ))}
               </div>
             )}
             {video.notes && (
-              <p className="mt-3 text-sm text-zinc-400">{video.notes}</p>
+              <p className="mt-4 max-w-prose text-small leading-relaxed text-muted">{video.notes}</p>
             )}
-          </div>
-        </div>
+          </Card>
+        </section>
 
-        {/* Right column: Timer + Controls */}
-        <div className="space-y-4">
-          {/* Playback Timer Panel */}
-          <div className="rounded-xl bg-zinc-900 p-6 text-center">
-            <p className="text-sm font-medium text-zinc-400">Elapsed</p>
-            <p className="mt-1 font-mono text-5xl font-bold tabular-nums text-white">
-              {formatTime(player.currentTime)}
-            </p>
-            <p className="mt-1 text-sm text-zinc-500">
-              / {formatTime(player.duration)}
-            </p>
-
-            {/* Playback state indicator */}
-            <div className="mt-4 flex items-center justify-center gap-2">
+        <aside aria-label="Workout controls" className="space-y-4 lg:sticky lg:top-20">
+          <Card as="section" padding="lg" className="overflow-hidden text-center">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-label">Elapsed time</p>
               <span
-                className={`inline-block h-2 w-2 rounded-full ${stateColor(player.state)}`}
-              />
-              <span className="text-sm capitalize text-zinc-400">
-                {player.state}
+                role="status"
+                aria-live="polite"
+                className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 text-xs font-semibold ${status.className}`}
+              >
+                <span aria-hidden="true" className={`h-2 w-2 rounded-full ${status.dotClassName}`} />
+                {status.label}
               </span>
             </div>
-          </div>
 
-          {/* Video Controls */}
-          <div className="flex gap-2">
+            <p className="mt-6 font-mono text-[clamp(3.75rem,7vw,5.5rem)] font-bold leading-none tracking-[-0.03em] tabular-nums text-text">
+              {formatTime(player.currentTime)}
+            </p>
+            <p className="mt-3 font-mono text-small tabular-nums text-muted">
+              of {formatTime(player.duration)}
+            </p>
+            <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
+              <div
+                className="h-full rounded-full bg-accent motion-safe:transition-[width] motion-safe:[transition-duration:var(--dur-fast)] motion-safe:[transition-timing-function:linear]"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-[1fr_auto] gap-3">
             {player.state === "playing" ? (
-              <button
+              <Button
                 onClick={player.pause}
-                className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg bg-zinc-700 px-4 py-2 font-medium text-white transition-colors hover:bg-zinc-600"
+                size="lg"
+                fullWidth
+                icon={<PauseIcon className="h-5 w-5" />}
               >
-                <PauseIcon className="h-5 w-5" />
                 Pause
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 onClick={player.play}
                 disabled={!player.isReady}
-                className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+                size="lg"
+                fullWidth
+                icon={<PlayIcon className="h-5 w-5" />}
               >
-                <PlayIcon className="h-5 w-5" />
                 {player.state === "ended" ? "Replay" : "Play"}
-              </button>
+              </Button>
             )}
-            <button
+            <IconButton
               onClick={() => player.seekTo(0)}
               disabled={!player.isReady}
-              className="flex min-h-[44px] items-center justify-center rounded-lg bg-zinc-700 px-4 py-2 text-white transition-colors hover:bg-zinc-600 disabled:opacity-50"
+              size="lg"
+              variant="secondary"
+              aria-label="Restart video"
             >
               <RestartIcon className="h-5 w-5" />
-            </button>
+            </IconButton>
           </div>
 
-          {/* Log Workout */}
-          <button
+          <Button
             onClick={handleLogWorkout}
-            disabled={isLogging || !player.isReady}
-            className={`flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition-colors ${
-              logSuccess
-                ? "bg-green-800 text-green-200"
-                : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-            }`}
+            disabled={!player.isReady}
+            loading={isLogging}
+            size="lg"
+            variant="secondary"
+            fullWidth
+            icon={logSuccess ? <CheckIcon className="h-5 w-5" /> : <ClipboardIcon className="h-5 w-5" />}
+            className={logSuccess ? "border-accent/40 bg-accent/15 text-accent" : ""}
           >
-            <LogWorkoutButtonContent
-              logSuccess={logSuccess}
-              isLogging={isLogging}
-            />
-          </button>
-          {logError && (
-            <p className="text-center text-sm text-red-400">{logError}</p>
-          )}
+            {logSuccess ? "Workout logged" : "Log workout"}
+          </Button>
+          {logError && <p role="alert" className="px-2 text-center text-small text-danger">{logError}</p>}
 
-          {/* Auto-Extract Cues */}
-          <AutoExtractButton
-            videoId={video.id}
-            onCuesExtracted={handleCuesChange}
-          />
-
-          {/* Exercise Cues List */}
-          {video.cues.length > 0 && (
-            <div className="rounded-xl bg-zinc-900 p-4">
-              <h2 className="mb-3 text-sm font-medium text-zinc-400">
-                Exercise Cues
-              </h2>
-              <div className="space-y-1">
-                {video.cues.map((cue) => (
-                  <button
-                    key={cue.id}
-                    onClick={() => player.seekTo(cue.timestamp)}
-                    className={`flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
-                      activeCue?.id === cue.id
-                        ? "bg-green-600/20 text-green-400"
-                        : "text-zinc-300 hover:bg-zinc-800"
-                    }`}
-                  >
-                    <span className="shrink-0 font-mono text-xs text-zinc-500">
-                      {formatTime(cue.timestamp)}
-                    </span>
-                    <span className="text-sm">{cue.exerciseName}</span>
-                  </button>
-                ))}
+          <details className="group rounded-lg bg-surface-1 [box-shadow:var(--shadow-card)]">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-5 text-left font-semibold text-muted motion-safe:transition-colors hover:bg-surface-2 hover:text-text active:bg-surface-3 [&::-webkit-details-marker]:hidden">
+              <span>
+                Workout cues
+                <span className="ml-2 text-small font-normal text-faint">{video.cues.length}</span>
+              </span>
+              <ChevronDownIcon className="h-5 w-5 motion-safe:transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="space-y-4 border-t border-border p-4">
+              {video.cues.length > 0 ? (
+                <div>
+                  <p className="text-label px-2">Cue timeline</p>
+                  <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
+                    {video.cues.map((cue) => {
+                      const isActive = activeCue?.id === cue.id;
+                      return (
+                        <button
+                          key={cue.id}
+                          onClick={() => player.seekTo(cue.timestamp)}
+                          aria-current={isActive ? "true" : undefined}
+                          className={`flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2 text-left motion-safe:transition-colors active:bg-surface-3 ${
+                            isActive
+                              ? "bg-accent/15 text-accent"
+                              : "text-muted hover:bg-surface-2 hover:text-text"
+                          }`}
+                        >
+                          <span className="shrink-0 font-mono text-xs tabular-nums text-faint">
+                            {formatTime(cue.timestamp)}
+                          </span>
+                          <span className="text-small font-medium">{cue.exerciseName}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p className="px-2 text-small leading-relaxed text-muted">
+                  No cues yet. Add them manually or extract them from the transcript.
+                </p>
+              )}
+              <div className="space-y-3 border-t border-border pt-4">
+                <AutoExtractButton videoId={video.id} onCuesExtracted={handleCuesChange} />
+                <CueEditor
+                  videoId={video.id}
+                  cues={video.cues}
+                  currentTime={player.currentTime}
+                  onCuesChange={handleCuesChange}
+                />
               </div>
             </div>
-          )}
-
-          {/* Cue Editor */}
-          <CueEditor
-            videoId={video.id}
-            cues={video.cues}
-            currentTime={player.currentTime}
-            onCuesChange={handleCuesChange}
-          />
-        </div>
+          </details>
+        </aside>
       </div>
     </div>
   );
 }
 
-// Log workout button content - extracted to avoid nested ternary
-function LogWorkoutButtonContent({
-  logSuccess,
-  isLogging,
-}: {
-  logSuccess: boolean;
-  isLogging: boolean;
-}) {
-  if (logSuccess) {
-    return (
-      <>
-        <CheckIcon className="h-5 w-5" />
-        Workout Logged!
-      </>
-    );
-  }
-
-  if (isLogging) {
-    return <>Logging...</>;
-  }
-
-  return (
-    <>
-      <ClipboardIcon className="h-5 w-5" />
-      Log Workout
-    </>
-  );
+function ChevronLeftIcon({ className }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M7.72 12.53a.75.75 0 010-1.06l7.5-7.5a.75.75 0 111.06 1.06L9.31 12l6.97 6.97a.75.75 0 11-1.06 1.06l-7.5-7.5z" clipRule="evenodd" /></svg>;
 }
 
-// Icons
-function ChevronLeftIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M7.72 12.53a.75.75 0 010-1.06l7.5-7.5a.75.75 0 111.06 1.06L9.31 12l6.97 6.97a.75.75 0 11-1.06 1.06l-7.5-7.5z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+function ChevronDownIcon({ className }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M12.53 16.28a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L12 14.69l6.97-6.97a.75.75 0 111.06 1.06l-7.5 7.5z" clipRule="evenodd" /></svg>;
 }
 
 function PlayIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M5 4.6a1.5 1.5 0 012.25-1.3l12 7.4a1.5 1.5 0 010 2.6l-12 7.4A1.5 1.5 0 015 19.4V4.6z" /></svg>;
 }
 
 function PauseIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M6.75 4.5A1.25 1.25 0 005.5 5.75v12.5a1.25 1.25 0 002.5 0V5.75A1.25 1.25 0 006.75 4.5zm10.5 0A1.25 1.25 0 0016 5.75v12.5a1.25 1.25 0 002.5 0V5.75a1.25 1.25 0 00-1.25-1.25z" /></svg>;
 }
 
 function RestartIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903H14.25a.75.75 0 000 1.5h6a.75.75 0 00.75-.75v-6a.75.75 0 00-1.5 0v3.068l-1.658-1.658A9 9 0 013.27 9.348a.75.75 0 001.486.211zm14.49 3.882a7.5 7.5 0 01-12.548 3.364l-1.903-1.903H9.75a.75.75 0 000-1.5h-6a.75.75 0 00-.75.75v6a.75.75 0 001.5 0v-3.068l1.658 1.658A9 9 0 0020.73 14.652a.75.75 0 00-1.486-.211z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M4.76 10.06A7.5 7.5 0 0117.3 6.7l1.9 1.9h-4.95a.75.75 0 000 1.5h6a.75.75 0 00.75-.75v-6a.75.75 0 00-1.5 0v3.07l-1.66-1.66A9 9 0 003.27 9.35a.75.75 0 001.49.71zm14.48 3.88A7.5 7.5 0 016.7 17.3l-1.9-1.9h4.95a.75.75 0 000-1.5h-6a.75.75 0 00-.75.75v6a.75.75 0 001.5 0v-3.07l1.66 1.66a9 9 0 0014.57-4.59.75.75 0 00-1.49-.71z" clipRule="evenodd" /></svg>;
 }
 
 function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M19.92 4.63a.75.75 0 01.2 1.04l-9 13.5a.75.75 0 01-1.15.11l-6-6a.75.75 0 011.06-1.06l5.35 5.35 8.5-12.74a.75.75 0 011.04-.2z" clipRule="evenodd" /></svg>;
 }
 
 function ClipboardIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M7.502 6h7.128A3.375 3.375 0 0118 9.375v9.375a3 3 0 003-3V6.108c0-1.505-1.125-2.811-2.664-2.94a48.972 48.972 0 00-.673-.05A3 3 0 0015 1.5h-1.5a3 3 0 00-2.663 1.618c-.225.015-.45.032-.673.05C8.662 3.295 7.554 4.542 7.502 6zM13.5 3A1.5 1.5 0 0012 4.5h4.5A1.5 1.5 0 0015 3h-1.5z"
-        clipRule="evenodd"
-      />
-      <path
-        fillRule="evenodd"
-        d="M3 9.375C3 8.339 3.84 7.5 4.875 7.5h9.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 013 20.625V9.375zm9.586 4.594a.75.75 0 00-1.172-.938l-2.476 3.096-.908-.907a.75.75 0 00-1.06 1.06l1.5 1.5a.75.75 0 001.116-.062l3-3.75z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M9 3.75A2.25 2.25 0 0111.25 1.5h1.5A2.25 2.25 0 0115 3.75h1.5A2.25 2.25 0 0118.75 6v14.25a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25V6A2.25 2.25 0 017.5 3.75H9zm2.25-.75a.75.75 0 00-.75.75v.75h3v-.75a.75.75 0 00-.75-.75h-1.5z" clipRule="evenodd" /></svg>;
 }

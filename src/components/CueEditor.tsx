@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { Button } from "@/components/ui";
 import type { ExerciseCue } from "@/lib/types";
 import { formatTime } from "@/lib/types";
 
@@ -195,23 +196,24 @@ export function CueEditor({
 
   if (!isOpen) {
     return (
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
-        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700"
+        variant="ghost"
+        fullWidth
+        icon={<PencilIcon className="h-4 w-4" />}
       >
-        <PencilIcon className="h-4 w-4" />
-        Edit Cues
-      </button>
+        Edit cues manually
+      </Button>
     );
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900 p-4">
+    <div className="rounded-md bg-surface-2 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-zinc-400">Cue Editor</h2>
+        <h2 className="text-small font-semibold text-text">Cue editor</h2>
         <button
           onClick={() => setIsOpen(false)}
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted motion-safe:transition-colors hover:bg-surface-3 hover:text-text active:bg-surface-3"
           aria-label="Close cue editor"
         >
           <XIcon className="h-4 w-4" />
@@ -225,7 +227,7 @@ export function CueEditor({
           value={exerciseName}
           onChange={(e) => setExerciseName(e.target.value)}
           placeholder="Exercise name"
-          className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 outline-none focus:ring-2 focus:ring-green-600"
+          className="min-h-11 w-full rounded-md bg-surface-1 px-3 py-2 text-small text-text placeholder:text-faint"
           onKeyDown={(e) => {
             if (e.key === "Enter" && exerciseName.trim()) handleQuickAdd();
           }}
@@ -234,7 +236,7 @@ export function CueEditor({
           <button
             onClick={handleQuickAdd}
             disabled={saving || !exerciseName.trim()}
-            className="flex min-h-[44px] flex-1 items-center justify-center gap-1 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+            className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-md bg-accent px-3 py-2 text-small font-semibold text-accent-fg motion-safe:transition motion-safe:active:scale-[0.98] hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
           >
             <PlusIcon className="h-4 w-4" />
             Add at {formatTime(Math.floor(currentTime))}
@@ -245,12 +247,12 @@ export function CueEditor({
               value={timestamp}
               onChange={(e) => setTimestamp(e.target.value)}
               placeholder="m:ss"
-              className="w-16 rounded-lg bg-zinc-800 px-2 py-2 text-center text-sm text-white placeholder-zinc-500 outline-none focus:ring-2 focus:ring-green-600"
+              className="min-h-11 w-16 rounded-md bg-surface-1 px-2 py-2 text-center text-small text-text placeholder:text-faint"
             />
             <button
               onClick={handleManualAdd}
               disabled={saving || !exerciseName.trim() || !timestamp}
-              className="flex min-h-[44px] items-center justify-center rounded-lg bg-zinc-700 px-3 py-2 text-sm text-white transition-colors hover:bg-zinc-600 disabled:opacity-50"
+              className="flex min-h-11 items-center justify-center rounded-md border border-border bg-surface-1 px-3 py-2 text-small font-semibold text-text motion-safe:transition motion-safe:active:scale-[0.98] hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Add
             </button>
@@ -259,12 +261,12 @@ export function CueEditor({
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-red-400">{error}</p>
+        <p role="alert" className="mt-2 text-small text-danger">{error}</p>
       )}
 
       {/* Cue list */}
       {cues.length > 0 && (
-        <div className="mt-4 space-y-1 border-t border-zinc-800 pt-3">
+        <div className="mt-4 space-y-1 border-t border-border pt-3">
           {cues.map((cue, idx) => (
             <div key={cue.id} className="flex items-center gap-1">
               {editingId === cue.id ? (
@@ -273,13 +275,13 @@ export function CueEditor({
                     type="text"
                     value={editTimestamp}
                     onChange={(e) => setEditTimestamp(e.target.value)}
-                    className="w-14 rounded bg-zinc-800 px-2 py-1 text-center font-mono text-xs text-white outline-none focus:ring-2 focus:ring-green-600"
+                    className="min-h-11 w-16 rounded-md bg-surface-1 px-2 py-1 text-center font-mono text-xs tabular-nums text-text"
                   />
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="min-w-0 flex-1 rounded bg-zinc-800 px-2 py-1 text-sm text-white outline-none focus:ring-2 focus:ring-green-600"
+                    className="min-h-11 min-w-0 flex-1 rounded-md bg-surface-1 px-2 py-1 text-small text-text"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSaveEdit(cue.id);
                       if (e.key === "Escape") setEditingId(null);
@@ -289,14 +291,14 @@ export function CueEditor({
                   <button
                     onClick={() => handleSaveEdit(cue.id)}
                     disabled={saving}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-green-400 transition-colors hover:text-green-300"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-accent motion-safe:transition-colors hover:bg-surface-3 hover:text-text active:bg-surface-3"
                     aria-label="Save edit"
                   >
                     <CheckIcon className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-zinc-400 transition-colors hover:text-white"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted motion-safe:transition-colors hover:bg-surface-3 hover:text-text active:bg-surface-3"
                     aria-label="Cancel edit"
                   >
                     <XIcon className="h-4 w-4" />
@@ -304,17 +306,17 @@ export function CueEditor({
                 </>
               ) : (
                 <>
-                  <span className="w-14 shrink-0 text-center font-mono text-xs text-zinc-500">
+                  <span className="w-14 shrink-0 text-center font-mono text-xs tabular-nums text-faint">
                     {formatTime(cue.timestamp)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-zinc-300">
+                  <span className="min-w-0 flex-1 truncate text-small text-muted">
                     {cue.exerciseName}
                   </span>
                   {/* Reorder buttons */}
                   <button
                     onClick={() => handleMove(cue.id, "up")}
                     disabled={idx === 0 || saving}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-zinc-500 transition-colors hover:text-white disabled:opacity-30"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-faint motion-safe:transition-colors hover:bg-surface-3 hover:text-text active:bg-surface-3 disabled:opacity-30"
                     aria-label="Move up"
                   >
                     <ChevronUpIcon className="h-3 w-3" />
@@ -322,7 +324,7 @@ export function CueEditor({
                   <button
                     onClick={() => handleMove(cue.id, "down")}
                     disabled={idx === cues.length - 1 || saving}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-zinc-500 transition-colors hover:text-white disabled:opacity-30"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-faint motion-safe:transition-colors hover:bg-surface-3 hover:text-text active:bg-surface-3 disabled:opacity-30"
                     aria-label="Move down"
                   >
                     <ChevronDownIcon className="h-3 w-3" />
@@ -330,7 +332,7 @@ export function CueEditor({
                   <button
                     onClick={() => startEdit(cue)}
                     disabled={saving}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-zinc-500 transition-colors hover:text-white"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-faint motion-safe:transition-colors hover:bg-surface-3 hover:text-text active:bg-surface-3"
                     aria-label="Edit cue"
                   >
                     <PencilIcon className="h-3 w-3" />
@@ -338,7 +340,7 @@ export function CueEditor({
                   <button
                     onClick={() => handleDelete(cue.id)}
                     disabled={saving}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-zinc-500 transition-colors hover:text-red-400"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-faint motion-safe:transition-colors hover:bg-danger/10 hover:text-danger active:bg-danger/15"
                     aria-label="Delete cue"
                   >
                     <TrashIcon className="h-3 w-3" />

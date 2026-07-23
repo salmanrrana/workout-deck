@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useId } from "react";
+import { Spinner } from "@/components/ui";
 
 // YouTube IFrame API types
 declare global {
@@ -31,13 +32,16 @@ declare global {
   }
 }
 
-interface YTPlayer {
+export interface VideoPlayerHandle {
   playVideo: () => void;
   pauseVideo: () => void;
-  stopVideo: () => void;
-  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
   getCurrentTime: () => number;
   getDuration: () => number;
+}
+
+interface YTPlayer extends VideoPlayerHandle {
+  stopVideo: () => void;
   getPlayerState: () => number;
   setVolume: (volume: number) => void;
   getVolume: () => number;
@@ -61,7 +65,7 @@ interface YouTubePlayerProps {
   onStateChange?: (state: PlayerState) => void;
   onTimeUpdate?: (currentTime: number) => void;
   onError?: (errorCode: number) => void;
-  onPlayerRef?: (player: YTPlayer) => void;
+  onPlayerRef?: (player: VideoPlayerHandle) => void;
   autoplay?: boolean;
   className?: string;
 }
@@ -235,8 +239,8 @@ export function YouTubePlayer({
     <div className={`relative aspect-video ${className}`}>
       <div id={containerId} className="absolute inset-0" />
       {!isReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-green-500" />
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-1">
+          <Spinner size="lg" label="Loading video player" />
         </div>
       )}
     </div>
@@ -245,13 +249,13 @@ export function YouTubePlayer({
 
 // Hook to control the player from parent components
 export function useYouTubePlayer() {
-  const playerRef = useRef<YTPlayer | null>(null);
+  const playerRef = useRef<VideoPlayerHandle | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [state, setState] = useState<PlayerState>("unstarted");
   const [isReady, setIsReady] = useState(false);
 
-  const registerPlayer = useCallback((player: YTPlayer) => {
+  const registerPlayer = useCallback((player: VideoPlayerHandle) => {
     playerRef.current = player;
   }, []);
 
