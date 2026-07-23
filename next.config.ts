@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const verificationDistDir = process.env.BRAIN_DUMP_VERIFY_BOOT
-  ? ".next/verify"
+  ? ".next-verify"
   : ".next";
 
 const nextConfig: NextConfig = {
