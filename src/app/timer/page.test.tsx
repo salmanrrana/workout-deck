@@ -66,6 +66,28 @@ describe("Interval Timer", () => {
     expect(screen.getByLabelText("Work seconds").hasAttribute("disabled")).toBe(false);
   });
 
+  it("catches up from elapsed wall-clock time after the tab was suspended", async () => {
+    vi.useFakeTimers();
+    const startedAt = new Date("2026-01-01T12:00:00.000Z");
+    vi.setSystemTime(startedAt);
+    render(<TimerPage />);
+
+    fireEvent.change(screen.getByLabelText("Work seconds"), { target: { value: "5" } });
+    fireEvent.change(screen.getByLabelText("Rest seconds"), { target: { value: "5" } });
+    fireEvent.change(screen.getByLabelText("Rounds"), { target: { value: "2" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+      await Promise.resolve();
+    });
+
+    vi.setSystemTime(new Date(startedAt.getTime() + 9000));
+    fireEvent(document, new Event("visibilitychange"));
+
+    expect(screen.getByRole("timer", { name: "REST 00:05" })).toBeTruthy();
+    expect(screen.getByText("Round 1 of 2")).toBeTruthy();
+  });
+
   it("completes a configured sequence after the final work interval", async () => {
     vi.useFakeTimers();
     render(<TimerPage />);

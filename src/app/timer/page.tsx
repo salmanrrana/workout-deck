@@ -32,7 +32,7 @@ type TimerState = TimerConfig & {
 type TimerAction =
   | { type: "configure"; config: TimerConfig }
   | { type: "start"; config: TimerConfig }
-  | { type: "tick" }
+  | { type: "elapse"; seconds: number }
   | { type: "togglePause" }
   | { type: "skip" }
   | { type: "reset"; config: TimerConfig };
@@ -88,6 +88,28 @@ function advance(state: TimerState): TimerState {
   return state;
 }
 
+function elapse(state: TimerState, seconds: number): TimerState {
+  if (!state.running || state.paused) return state;
+
+  let next = state;
+  let pending = Math.max(0, Math.floor(seconds));
+
+  while (pending > 0 && next.running) {
+    const secondsUntilAdvance = next.phase === "countIn"
+      ? next.remaining + 1
+      : next.remaining;
+
+    if (pending < secondsUntilAdvance) {
+      return { ...next, remaining: next.remaining - pending };
+    }
+
+    pending -= secondsUntilAdvance;
+    next = advance(next);
+  }
+
+  return next;
+}
+
 function timerReducer(state: TimerState, action: TimerAction): TimerState {
   switch (action.type) {
     case "configure":
@@ -101,12 +123,8 @@ function timerReducer(state: TimerState, action: TimerAction): TimerState {
         running: true,
         paused: false,
       };
-    case "tick":
-      if (!state.running || state.paused) return state;
-      if (state.phase === "countIn") {
-        return state.remaining > 0 ? { ...state, remaining: state.remaining - 1 } : advance(state);
-      }
-      return state.remaining > 1 ? { ...state, remaining: state.remaining - 1 } : advance(state);
+    case "elapse":
+      return elapse(state, action.seconds);
     case "togglePause":
       return state.running ? { ...state, paused: !state.paused } : state;
     case "skip":
@@ -164,11 +182,35 @@ export default function TimerPage() {
   );
   const [timer, dispatch] = useReducer(timerReducer, DEFAULT_CONFIG, initialState);
   const previousPhase = useRef<Phase>(timer.phase);
+  const lastReconciledAt = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!timer.running || timer.paused) return;
-    const interval = window.setInterval(() => dispatch({ type: "tick" }), 1000);
-    return () => window.clearInterval(interval);
+    if (!timer.running || timer.paused) {
+      lastReconciledAt.current = null;
+      return;
+    }
+
+    lastReconciledAt.current = Date.now();
+    const reconcileElapsedTime = () => {
+      const now = Date.now();
+      const previous = lastReconciledAt.current ?? now;
+      const elapsedSeconds = Math.floor((now - previous) / 1000);
+      if (elapsedSeconds < 1) return;
+
+      lastReconciledAt.current = previous + elapsedSeconds * 1000;
+      dispatch({ type: "elapse", seconds: elapsedSeconds });
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") reconcileElapsedTime();
+    };
+    const interval = window.setInterval(reconcileElapsedTime, 1000);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      lastReconciledAt.current = null;
+    };
   }, [timer.running, timer.paused]);
 
   useEffect(() => {
