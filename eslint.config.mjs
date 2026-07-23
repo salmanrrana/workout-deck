@@ -11,6 +11,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     ".next-build/**",
     ".next-verify/**",
+    ".next-verify-*/**",
+    ".next-verify-config/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

@@ -17,6 +17,8 @@
 /.next/
 /.next-build/
 /.next-verify/
+/.next-verify-*/
+/.next-verify-config/
 /out/
 
 # production

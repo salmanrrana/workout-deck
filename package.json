@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development next dev",
-    "dev:verify": "NODE_ENV=development NEXT_DIST_DIR=.next-verify next dev",
+    "dev:verify": "node scripts/start-verification.mjs",
     "build": "NODE_ENV=production NEXT_DIST_DIR=.next-build next build",
     "start": "NODE_ENV=production NEXT_DIST_DIR=.next-build next start",
     "lint": "eslint",
