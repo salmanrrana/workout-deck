@@ -40,8 +40,8 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-text: var(--text);
-  --color-text-muted: var(--text-muted);
-  --color-text-faint: var(--text-faint);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-fg: var(--accent-fg);
