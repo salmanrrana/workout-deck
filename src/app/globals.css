@@ -94,6 +94,35 @@ body {
   text-transform: uppercase;
 }
 
+.timer-instrument {
+  background:
+    radial-gradient(circle at 38% 42%, color-mix(in srgb, var(--timer-color) 10%, transparent), transparent 32rem),
+    var(--bg-base);
+  transition: background-color var(--dur-slow) var(--ease);
+}
+
+.timer-progress-ring {
+  transition:
+    stroke-dashoffset 1s linear,
+    stroke var(--dur-slow) var(--ease);
+}
+
+.timer-final-pulse {
+  animation: timer-final-pulse var(--dur-slow) var(--ease) infinite alternate;
+}
+
+@keyframes timer-final-pulse {
+  from {
+    filter: drop-shadow(0 0 0 transparent);
+    transform: scale(1);
+  }
+  to {
+    color: var(--timer-color);
+    filter: drop-shadow(0 8px 24px color-mix(in srgb, var(--timer-color) 35%, transparent));
+    transform: scale(1.035);
+  }
+}
+
 .ui-skeleton {
   background-image: linear-gradient(
     100deg,
@@ -111,7 +140,17 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .timer-instrument,
+  .timer-progress-ring {
+    transition: none;
+  }
+
+  .timer-final-pulse,
   .ui-skeleton {
     animation: none;
+  }
+
+  .timer-final-pulse {
+    color: var(--timer-color);
   }
 }
