@@ -136,9 +136,10 @@ export function YouTubePlayer({
 }: YouTubePlayerProps) {
   const uniqueId = useId();
   const containerId = `yt-player-${uniqueId.replace(/:/g, "-")}`;
+  const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayer | null>(null);
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [readyVideoId, setReadyVideoId] = useState<string | null>(null);
 
   // Store callbacks in refs to avoid re-creating player
   const onReadyRef = useRef(onReady);
@@ -177,15 +178,21 @@ export function YouTubePlayer({
   // Initialize player
   useEffect(() => {
     let mounted = true;
+    const host = hostRef.current;
+    if (!host) return;
+
+    // The YouTube SDK replaces its target element with an iframe. Keep that
+    // SDK-owned node below a React-owned host so a video change can always
+    // install a fresh target after destroy() removes the previous iframe.
+    const container = document.createElement("div");
+    container.id = containerId;
+    container.className = "absolute inset-0";
+    host.replaceChildren(container);
 
     async function initPlayer() {
       await loadYouTubeAPI();
 
-      if (!mounted) return;
-
-      // Wait for container to be in DOM
-      const container = document.getElementById(containerId);
-      if (!container) return;
+      if (!mounted || !container.isConnected) return;
 
       playerRef.current = new window.YT.Player(containerId, {
         videoId,
@@ -199,7 +206,7 @@ export function YouTubePlayer({
         events: {
           onReady: (event) => {
             if (!mounted) return;
-            setIsReady(true);
+            setReadyVideoId(videoId);
             onPlayerRefRef.current?.(event.target);
             onReadyRef.current?.();
           },
@@ -233,13 +240,14 @@ export function YouTubePlayer({
         playerRef.current.destroy();
         playerRef.current = null;
       }
+      host.replaceChildren();
     };
   }, [videoId, autoplay, containerId, startTimeUpdates, stopTimeUpdates]);
 
   return (
     <div className={`relative aspect-video ${className}`}>
-      <div id={containerId} className="absolute inset-0" />
-      {!isReady && (
+      <div ref={hostRef} className="absolute inset-0" />
+      {readyVideoId !== videoId && (
         <div className="absolute inset-0 flex items-center justify-center bg-surface-1">
           <Spinner size="lg" label="Loading video player" />
         </div>
