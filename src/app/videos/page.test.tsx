@@ -36,13 +36,25 @@ describe("VideosPage", () => {
     vi.restoreAllMocks();
   });
 
+  it("shows a deck-shaped loading state until videos arrive", async () => {
+    const request = deferredVideosResponse();
+    vi.spyOn(globalThis, "fetch").mockImplementationOnce(() => request.promise);
+
+    render(<VideosPage />);
+
+    expect(screen.getByRole("status", { name: "Loading your deck" })).toBeTruthy();
+    await act(async () => request.resolve([]));
+    expect(screen.queryByRole("status", { name: "Loading your deck" })).toBeNull();
+    expect(screen.getByText("Your deck is empty")).toBeTruthy();
+  });
+
   it("uses links for Add Video navigation", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify([]), { status: 200 }),
     );
     render(<VideosPage />);
 
-    await waitFor(() => expect(screen.getByText("Your video library is empty")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Your deck is empty")).toBeTruthy());
     for (const link of screen.getAllByRole("link", { name: /add video/i })) {
       expect(link.getAttribute("href")).toBe("/videos/new");
     }
@@ -130,10 +142,10 @@ describe("VideosPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear all filters" }));
 
     await act(async () => clearedFilters.resolve([]));
-    expect(screen.getByText("Your video library is empty")).toBeTruthy();
+    expect(screen.getByText("Your deck is empty")).toBeTruthy();
 
     await act(async () => staleFilters.resolve([video]));
-    expect(screen.getByText("Your video library is empty")).toBeTruthy();
+    expect(screen.getByText("Your deck is empty")).toBeTruthy();
     expect(screen.queryByText("Morning mobility")).toBeNull();
   });
 });

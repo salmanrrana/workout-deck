@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { VideoCard } from "@/components/VideoCard";
-import { Button, Chip, EmptyState, Input, Spinner } from "@/components/ui";
+import { Button, Card, Chip, EmptyState, Input, Skeleton } from "@/components/ui";
 import { buttonClassName } from "@/components/ui/Button";
 
 interface Video {
@@ -13,6 +13,7 @@ interface Video {
   tags: string[];
   notes: string | null;
   createdAt: string;
+  provider?: "youtube" | "vimeo";
 }
 
 export default function VideosPage() {
@@ -95,12 +96,11 @@ export default function VideosPage() {
 
   return (
     <div className="py-8">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold sm:text-4xl">Video Library</h1>
-          <p className="mt-1 text-muted">
-            {videos.length} video{videos.length !== 1 ? "s" : ""}
-            {selectedTag && ` tagged "${selectedTag}"`}
+      <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <h1 className="text-h1 font-bold tracking-tight sm:text-display-xl">Video Library</h1>
+          <p className="mt-2 text-muted">
+            Find the right card, press play, and get moving.
           </p>
         </div>
         <Link href="/videos/new" className={buttonClassName()}>
@@ -110,7 +110,7 @@ export default function VideosPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
+      <div className="mb-8 space-y-4">
         <Input
           aria-label="Search videos"
           type="search"
@@ -144,29 +144,31 @@ export default function VideosPage() {
           </div>
         )}
 
-        {/* Clear Filters */}
-        {hasFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Clear all filters
-          </Button>
-        )}
+        <div className="flex min-h-9 flex-wrap items-center justify-between gap-3">
+          <p className="text-label" aria-live="polite">
+            {isLoading
+              ? "Updating your deck"
+              : `${videos.length} card${videos.length === 1 ? "" : "s"}${selectedTag ? ` · ${selectedTag}` : ""}${searchQuery ? ` · “${searchQuery}”` : ""}`}
+          </p>
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Clear all filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Spinner size="lg" label="Loading videos" />
-        </div>
-      )}
+      {isLoading && <VideoGridSkeleton />}
 
       {/* Empty State */}
       {!isLoading && videos.length === 0 && (
         <EmptyState
           icon={<VideoIcon className="h-6 w-6" />}
-          title={hasFilters ? "No videos match your filters" : "Your video library is empty"}
+          title={hasFilters ? "No cards match those filters" : "Your deck is empty"}
           description={
             hasFilters
-              ? "Try clearing your search or tag filters."
+              ? "Try a different search, choose another tag, or clear your filters."
               : "Add your first workout video to start building your deck."
           }
           action={
@@ -193,6 +195,32 @@ export default function VideosPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function VideoGridSkeleton() {
+  return (
+    <section
+      role="status"
+      aria-label="Loading your deck"
+      aria-busy="true"
+      className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
+      <span className="sr-only">Loading your deck</span>
+      {Array.from({ length: 8 }, (_, index) => (
+        <Card key={index} padding="none" className="overflow-hidden">
+          <Skeleton className="aspect-video rounded-none" />
+          <div className="space-y-3 p-4">
+            <Skeleton className="h-5 w-4/5" />
+            <div className="flex gap-2">
+              <Skeleton className="h-7 w-16 rounded-full" />
+              <Skeleton className="h-7 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-11 w-full" />
+          </div>
+        </Card>
+      ))}
+    </section>
   );
 }
 

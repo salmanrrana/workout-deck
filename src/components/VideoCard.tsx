@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Card, Chip, IconButton } from "@/components/ui";
+import { buttonClassName } from "@/components/ui/Button";
 
 interface Video {
   id: string;
@@ -11,6 +14,7 @@ interface Video {
   tags: string[];
   notes: string | null;
   createdAt: string;
+  provider?: "youtube" | "vimeo";
 }
 
 interface VideoCardProps {
@@ -18,159 +22,221 @@ interface VideoCardProps {
   onDelete?: (id: string) => void;
 }
 
+function getProvider(video: Video): "youtube" | "vimeo" {
+  if (video.provider) return video.provider;
+  return /^(vimeo:|https?:\/\/(?:www\.)?vimeo\.com)/i.test(video.youtubeId)
+    ? "vimeo"
+    : "youtube";
+}
+
 export function VideoCard({ video, onDelete }: VideoCardProps) {
+  const router = useRouter();
+  const [imageFailed, setImageFailed] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const thumbnailUrl = `https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`;
+  const provider = getProvider(video);
+  const thumbnailUrl =
+    provider === "youtube"
+      ? `https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`
+      : null;
 
   const handleDelete = async () => {
     if (!onDelete) return;
     setIsDeleting(true);
+    setDeleteError(null);
+
     try {
-      const res = await fetch(`/api/videos/${video.id}`, {
+      const response = await fetch(`/api/videos/${video.id}`, {
         method: "DELETE",
       });
-      if (res.ok) {
-        onDelete(video.id);
-      }
-    } catch (error) {
-      console.error("Failed to delete video:", error);
+      if (!response.ok) throw new Error("Delete request failed");
+
+      onDelete(video.id);
+      setShowConfirm(false);
+    } catch {
+      setDeleteError("Couldn’t delete this video. Try again.");
     } finally {
       setIsDeleting(false);
-      setShowConfirm(false);
     }
   };
 
-  return (
-    <div className="group relative overflow-hidden rounded-xl bg-zinc-900 transition-transform hover:scale-[1.02]">
-      {/* Thumbnail */}
-      <Link href={`/videos/${video.id}`} className="block">
-        <div className="relative aspect-video">
-          <Image
-            src={thumbnailUrl}
-            alt={video.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-          />
-          {/* Play overlay on hover */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-            <PlayIcon className="h-16 w-16 text-white" />
-          </div>
-        </div>
-      </Link>
+  const cancelDelete = () => {
+    setShowConfirm(false);
+    setDeleteError(null);
+  };
 
-      {/* Content */}
-      <div className="p-4">
-        <Link href={`/videos/${video.id}`}>
-          <h3 className="line-clamp-2 font-semibold text-white transition-colors hover:text-green-400">
+  return (
+    <article className="group/card relative rounded-lg bg-surface-1 [box-shadow:var(--shadow-card)] motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:hover:-translate-y-0.5 motion-safe:hover:[box-shadow:var(--shadow-pop)]">
+      <Card
+        as="a"
+        href={`/videos/${video.id}`}
+        interactive
+        padding="none"
+        aria-label={`Play ${video.title}`}
+        className="group/link block overflow-hidden rounded-b-none bg-transparent [box-shadow:none] motion-safe:hover:[box-shadow:none]"
+      >
+        <div className="relative aspect-video overflow-hidden rounded-t-lg bg-surface-2">
+          {thumbnailUrl && !imageFailed ? (
+            <Image
+              src={thumbnailUrl}
+              alt={`${video.title} thumbnail`}
+              fill
+              className="object-cover motion-safe:transition motion-safe:[transition-duration:var(--dur-slow)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:group-hover/link:scale-[1.03] motion-safe:group-focus-visible/link:scale-[1.03]"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-faint">
+              <VideoPlaceholderIcon className="h-12 w-12" />
+            </div>
+          )}
+
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-bg-base/90 via-bg-base/20 to-transparent opacity-0 motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] group-hover/link:opacity-100 group-focus-visible/link:opacity-100">
+            <span className="flex h-14 w-14 scale-90 items-center justify-center rounded-full bg-accent text-accent-fg [box-shadow:var(--shadow-pop)] motion-safe:transition motion-safe:[transition-duration:var(--dur)] motion-safe:[transition-timing-function:var(--ease)] motion-safe:group-hover/link:scale-100 motion-safe:group-focus-visible/link:scale-100">
+              <PlayIcon className="ml-0.5 h-6 w-6" />
+            </span>
+          </div>
+
+          <Chip
+            size="sm"
+            className="absolute left-3 top-3 bg-surface-1 text-text [box-shadow:var(--shadow-card)] hover:bg-surface-1 hover:text-text"
+          >
+            {provider === "vimeo" ? "Vimeo" : "YouTube"}
+          </Chip>
+        </div>
+
+        <div className="p-4 pb-3">
+          <h3 className="line-clamp-2 text-h3 font-semibold text-text motion-safe:transition-colors motion-safe:[transition-duration:var(--dur)] group-hover/link:text-accent group-focus-visible/link:text-accent">
             {video.title}
           </h3>
-        </Link>
 
-        {/* Tags */}
-        {video.tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {video.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400"
+          {video.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {video.tags.map((tag) => (
+                <Chip key={tag} size="sm" variant="neutral">
+                  {tag}
+                </Chip>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <div className="border-t border-border p-3">
+        {showConfirm ? (
+          <div
+            role="group"
+            aria-label={`Delete ${video.title}?`}
+            className="flex items-center gap-2 rounded-md bg-surface-2 p-1.5"
+          >
+            <span className="min-w-0 flex-1 pl-2 text-small font-semibold text-text">
+              Delete?
+            </span>
+            <IconButton
+              aria-label={`Confirm delete ${video.title}`}
+              variant="danger"
+              loading={isDeleting}
+              disabled={isDeleting}
+              onClick={() => void handleDelete()}
+            >
+              <CheckIcon className="h-4 w-4" />
+            </IconButton>
+            <IconButton
+              aria-label="Cancel delete"
+              variant="ghost"
+              disabled={isDeleting}
+              onClick={cancelDelete}
+            >
+              <CloseIcon className="h-4 w-4" />
+            </IconButton>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/videos/${video.id}`}
+              className={buttonClassName({ className: "flex-1", size: "md" })}
+            >
+              <PlayIcon className="h-4 w-4" />
+              Play
+            </Link>
+            <IconButton
+              aria-label={`Edit ${video.title}`}
+              onClick={() => router.push(`/videos/${video.id}/edit`)}
+            >
+              <EditIcon className="h-4 w-4" />
+            </IconButton>
+            {onDelete && (
+              <IconButton
+                aria-label={`Delete ${video.title}`}
+                variant="danger"
+                onClick={() => {
+                  setDeleteError(null);
+                  setShowConfirm(true);
+                }}
               >
-                {tag}
-              </span>
-            ))}
+                <TrashIcon className="h-4 w-4" />
+              </IconButton>
+            )}
           </div>
         )}
 
-        {/* Actions */}
-        <div className="mt-3 flex items-center gap-2">
-          <Link
-            href={`/videos/${video.id}`}
-            className="flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
-          >
-            <PlayIcon className="h-4 w-4" />
-            Play
-          </Link>
-          <Link
-            href={`/videos/${video.id}/edit`}
-            className="flex min-h-[36px] items-center justify-center rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-600"
-          >
-            <EditIcon className="h-4 w-4" />
-          </Link>
-          {showConfirm ? (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="flex min-h-[36px] items-center justify-center rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
-              >
-                {isDeleting ? "..." : "Yes"}
-              </button>
-              <button
-                onClick={() => setShowConfirm(false)}
-                className="flex min-h-[36px] items-center justify-center rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-600"
-              >
-                No
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="flex min-h-[36px] items-center justify-center rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-600"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        {deleteError && (
+          <p role="alert" className="mt-2 text-small text-danger">
+            {deleteError}
+          </p>
+        )}
       </div>
-    </div>
+    </article>
   );
 }
 
 function PlayIcon({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
-        clipRule="evenodd"
-      />
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M7 5.5a1 1 0 0 1 1.53-.85l10 6.5a1 1 0 0 1 0 1.7l-10 6.5A1 1 0 0 1 7 18.5v-13Z" />
     </svg>
   );
 }
 
 function EditIcon({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 5.25 3 3M4.5 19.5l3.7-.75L19 7.95a2.12 2.12 0 0 0-3-3L5.2 15.75l-.7 3.75Z" />
     </svg>
   );
 }
 
 function TrashIcon({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        fillRule="evenodd"
-        d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z"
-        clipRule="evenodd"
-      />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 7.5h15m-9-3h3m-7.5 3 .75 12h10.5l.75-12M10 11v5m4-5v5" />
+    </svg>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4 4L19 6" />
+    </svg>
+  );
+}
+
+function CloseIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+      <path strokeLinecap="round" d="m6 6 12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function VideoPlaceholderIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m10 9 5 3-5 3V9Z" fill="currentColor" stroke="none" />
     </svg>
   );
 }
