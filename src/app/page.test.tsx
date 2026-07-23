@@ -2,23 +2,14 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import Home from "./page";
 
-describe("Home", () => {
-  it("renders the History quick link", () => {
+describe("Home dashboard", () => {
+  it("makes starting a workout the primary path while preserving every destination", () => {
     render(<Home />);
-    const history = screen.getByRole("link", { name: /history/i });
-    expect(history.getAttribute("href")).toBe("/history");
-  });
 
-  it("styles the History quick link with yellow background classes, not zinc", () => {
-    render(<Home />);
-    const historyLinks = screen.getAllByRole("link", { name: /history/i });
-    expect(historyLinks.length).toBeGreaterThan(0);
-    for (const history of historyLinks) {
-      expect(history.getAttribute("href")).toBe("/history");
-      const className = history.getAttribute("class") ?? "";
-      expect(className).toMatch(/bg-yellow-/);
-      expect(className).not.toMatch(/bg-zinc-/);
-      expect(className).toMatch(/hover:bg-yellow-/);
-    }
+    expect(screen.getByRole("heading", { level: 1, name: "WorkoutDeck" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Start a workout/i }).getAttribute("href")).toBe("/videos");
+    expect(screen.getByRole("link", { name: /Workout videos/i }).getAttribute("href")).toBe("/videos");
+    expect(screen.getByRole("link", { name: /Interval timer/i }).getAttribute("href")).toBe("/timer");
+    expect(screen.getByRole("link", { name: /Workout history/i }).getAttribute("href")).toBe("/history");
   });
 });
