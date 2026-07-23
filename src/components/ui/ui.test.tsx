@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Button, Chip, EmptyState, Input } from "./index";
+import { Button, Card, Chip, EmptyState, Input } from "./index";
 
 describe("UI primitives", () => {
   it("disables a loading button and exposes its busy state", () => {
@@ -47,5 +47,31 @@ describe("UI primitives", () => {
 
     expect(screen.getByRole("heading", { name: "Your deck is empty" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add video" })).toBeTruthy();
+  });
+
+  it("makes interactive cards keyboard-activatable by default", () => {
+    const onClick = vi.fn();
+    render(
+      <Card interactive onClick={onClick}>
+        Start a workout
+      </Card>,
+    );
+
+    const card = screen.getByRole("button", { name: "Start a workout" });
+    expect(card.getAttribute("tabindex")).toBe("0");
+    fireEvent.keyDown(card, { key: "Enter" });
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("forwards native anchor props when Card renders as a link", () => {
+    render(
+      <Card as="a" href="/videos" interactive>
+        Videos
+      </Card>,
+    );
+
+    const link = screen.getByRole("link", { name: "Videos" });
+    expect(link.getAttribute("href")).toBe("/videos");
+    expect(link.getAttribute("role")).toBeNull();
   });
 });

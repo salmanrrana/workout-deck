@@ -42,7 +42,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         type={type}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
-        className={`inline-flex shrink-0 items-center justify-center rounded-md transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+        className={`inline-flex shrink-0 items-center justify-center rounded-md transition motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
         style={{ transitionDuration: "var(--dur)", transitionTimingFunction: "var(--ease)" }}
         {...props}
       >

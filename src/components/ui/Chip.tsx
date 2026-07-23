@@ -50,7 +50,7 @@ function chipClassName(
   interactive: boolean,
   className: string,
 ) {
-  return `inline-flex items-center justify-center gap-1.5 rounded-full font-medium transition ${interactive ? "cursor-pointer active:scale-[0.98]" : ""} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+  return `inline-flex items-center justify-center gap-1.5 rounded-full font-medium transition ${interactive ? "cursor-pointer motion-safe:active:scale-[0.98]" : ""} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
 }
 
 const chipStyle = {
@@ -107,7 +107,7 @@ export function Chip(props: ChipProps) {
           type="button"
           aria-label={removeLabel ?? `Remove ${typeof children === "string" ? children : "chip"}`}
           onClick={onRemove}
-          className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-surface-3 active:scale-[0.98]"
+          className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-surface-3 motion-safe:active:scale-[0.98]"
         >
           <span aria-hidden="true">×</span>
         </button>
