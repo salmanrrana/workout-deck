@@ -2,11 +2,6 @@
   "name": "workout-deck",
   "version": "0.1.0",
   "private": true,
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
-  },
   "scripts": {
     "dev": "NODE_ENV=development next dev",
     "dev:verify": "node scripts/start-verification.mjs",
@@ -18,10 +13,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.0",
-    "@prisma/adapter-better-sqlite3": "^7.2.0",
+    "@netlify/database": "^1.1.0",
+    "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.2.0",
-    "better-sqlite3": "^12.5.0",
     "next": "16.1.1",
+    "pg": "^8.22.0",
     "prisma": "^7.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -29,8 +25,8 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@testing-library/react": "^16.3.2",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
+    "@types/pg": "^8.20.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",

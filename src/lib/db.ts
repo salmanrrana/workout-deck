@@ -1,11 +1,15 @@
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import path from "path";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const dbPath = process.env.WORKOUT_DECK_DB_PATH
-  ? path.resolve(process.env.WORKOUT_DECK_DB_PATH)
-  : path.join(process.cwd(), "prisma", "dev.db");
-const adapter = new PrismaBetterSqlite3({ url: dbPath });
+// Netlify injects NETLIFY_DB_URL in builds and functions; DATABASE_URL covers
+// local tooling. The fallback keeps module evaluation safe at build time —
+// queries against it simply fail with a connection error.
+const connectionString =
+  process.env.NETLIFY_DB_URL ??
+  process.env.DATABASE_URL ??
+  "postgresql://localhost:5432/workout_deck";
+
+const adapter = new PrismaPg({ connectionString });
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

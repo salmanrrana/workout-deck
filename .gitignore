@@ -64,3 +64,6 @@ plans/ralph*.sh
 .pi/tmp/
 .ralph-prompt.md
 .ralph-services.json
+
+# Local Netlify folder
+.netlify

@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Video {
@@ -53,6 +53,12 @@ model TimerPreset {
 //   rounds?: number
 //   beepInterval?: number (seconds)
 // }
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
 
 model WorkoutLog {
   id            String   @id @default(uuid())
