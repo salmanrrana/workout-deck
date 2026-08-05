@@ -1,0 +1,8 @@
+[build]
+  # Prisma client output (src/generated/prisma) is gitignored, so generate it
+  # before building. Plain `next build` keeps the default .next dist dir the
+  # Netlify Next.js runtime expects.
+  command = "pnpm exec prisma generate && pnpm exec next build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
