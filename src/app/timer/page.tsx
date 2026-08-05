@@ -8,7 +8,7 @@
  * FORM: A precisely specified cockpit extension of WorkoutDeck's established visual system; no concept seed required.
  */
 
-import { useEffect, useReducer, useRef, type CSSProperties } from "react";
+import { useEffect, useReducer, useRef, useState, type CSSProperties } from "react";
 import { Button, Card, Chip, Input } from "@/components/ui";
 import { enableAudio, playSound } from "@/lib/audio";
 
@@ -185,6 +185,8 @@ export default function TimerPage() {
   const [timer, dispatch] = useReducer(timerReducer, DEFAULT_CONFIG, initialState);
   const previousPhase = useRef<Phase>(timer.phase);
   const lastReconciledAt = useRef<number | null>(null);
+  const sessionStartedAt = useRef<number | null>(null);
+  const [logged, setLogged] = useState(false);
 
   useEffect(() => {
     if (!timer.running || timer.paused) {
@@ -222,7 +224,27 @@ export default function TimerPage() {
 
     if (timer.phase === "work") playSound("intervalStart");
     if (timer.phase === "rest") playSound("intervalEnd");
-    if (timer.phase === "complete") playSound("workoutComplete");
+    if (timer.phase === "complete") {
+      playSound("workoutComplete");
+
+      // Count the finished session toward streaks and history automatically.
+      const startedAt = sessionStartedAt.current;
+      sessionStartedAt.current = null;
+      const duration = startedAt !== null
+        ? Math.max(0, Math.round((Date.now() - startedAt) / 1000))
+        : null;
+      void fetch("/api/workout-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ duration, notes: "Interval timer session" }),
+      })
+        .then((response) => {
+          if (response.ok) setLogged(true);
+        })
+        .catch(() => {
+          // Logging is best-effort; the timer experience never blocks on it.
+        });
+    }
   }, [timer.phase]);
 
   useEffect(() => {
@@ -300,6 +322,8 @@ export default function TimerPage() {
 
   const start = async () => {
     await enableAudio();
+    sessionStartedAt.current = Date.now();
+    setLogged(false);
     dispatch({ type: "start", config });
   };
 
@@ -325,7 +349,7 @@ export default function TimerPage() {
   const pageStyle = { "--timer-color": phaseColor(timer) } as CSSProperties;
   const finalSeconds = (timer.phase === "work" || timer.phase === "rest") && timer.remaining <= 3;
   const liveMessage = timer.phase === "complete"
-    ? "Workout complete"
+    ? `Workout complete${logged ? ". Session logged to your history" : ""}`
     : `${currentPhaseLabel}. Round ${timer.round} of ${timer.rounds}${timer.paused ? ". Paused" : ""}`;
 
   return (
@@ -378,6 +402,9 @@ export default function TimerPage() {
                 {displayTime}
               </div>
               <p className="mt-3 text-body font-semibold text-muted">Round {timer.round} of {timer.rounds}</p>
+              {timer.phase === "complete" && logged && (
+                <p className="mt-2 text-small font-semibold text-accent">Session logged — streak updated</p>
+              )}
             </div>
           </div>
 

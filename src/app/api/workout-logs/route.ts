@@ -49,13 +49,6 @@ export async function POST(request: NextRequest) {
   try {
     const { videoId, timerPresetId, duration, notes } = body;
 
-    if (!videoId && !timerPresetId) {
-      return NextResponse.json(
-        { error: "Either videoId or timerPresetId is required" },
-        { status: 400 }
-      );
-    }
-
     if (
       duration !== undefined &&
       duration !== null &&

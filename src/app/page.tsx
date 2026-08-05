@@ -6,6 +6,7 @@
  * FORM: A restrained athletic dashboard shaped directly from the ticket's prescribed structure.
  */
 import Link from "next/link";
+import { MomentumPanel } from "@/components/MomentumPanel";
 import { Card, Logo } from "@/components/ui";
 import { buttonClassName } from "@/components/ui/Button";
 
@@ -60,6 +61,8 @@ export default function Home() {
           <ArrowIcon className="h-5 w-5" />
         </Link>
       </section>
+
+      <MomentumPanel />
 
       <section aria-labelledby="deck-heading" className="mx-auto mt-16 max-w-6xl sm:mt-20">
         <div className="mb-6 sm:flex sm:items-end sm:justify-between">
