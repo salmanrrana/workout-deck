@@ -13,6 +13,7 @@ const eslintConfig = defineConfig([
     ".next-verify/**",
     ".next-verify-*/**",
     ".next-verify-config/**",
+    ".netlify/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
