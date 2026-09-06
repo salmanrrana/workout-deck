@@ -1,6 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button, Card, Chip, EmptyState, Input } from "./index";
+
+afterEach(cleanup);
 
 describe("UI primitives", () => {
   it("disables a loading button and exposes its busy state", () => {
@@ -16,7 +18,9 @@ describe("UI primitives", () => {
 
     const input = screen.getByRole("textbox", { name: "Video title" });
     expect(input.getAttribute("aria-invalid")).toBe("true");
-    expect(screen.getByText("A title is required").id).toBe(input.getAttribute("aria-describedby"));
+    expect(screen.getByText("A title is required").id).toBe(
+      input.getAttribute("aria-describedby"),
+    );
   });
 
   it("activates clickable chips as native buttons with pressed state", () => {
@@ -43,9 +47,17 @@ describe("UI primitives", () => {
   });
 
   it("renders empty-state guidance and its action", () => {
-    render(<EmptyState title="Your deck is empty" description="Add a workout video." action={<Button>Add video</Button>} />);
+    render(
+      <EmptyState
+        title="Your deck is empty"
+        description="Add a workout video."
+        action={<Button>Add video</Button>}
+      />,
+    );
 
-    expect(screen.getByRole("heading", { name: "Your deck is empty" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Your deck is empty" }),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add video" })).toBeTruthy();
   });
 
@@ -101,24 +113,52 @@ describe("UI primitives", () => {
   });
 
   it("restricts Card hosts to semantic combinations", () => {
-    const Wrapper = (props: React.ComponentPropsWithoutRef<"div">) => <div {...props} />;
+    const Wrapper = (props: React.ComponentPropsWithoutRef<"div">) => (
+      <div {...props} />
+    );
 
-    // @ts-expect-error Custom hosts cannot guarantee the rendered element's semantics.
-    const customHost = <Card as={Wrapper} interactive onClick={() => undefined}>Custom</Card>;
-    // @ts-expect-error Native activating hosts must opt into interactive styling.
-    const staticLink = <Card as="a" href="/videos">Videos</Card>;
-    // @ts-expect-error An anchor without href has no native keyboard semantics.
-    const hrefLessLink = <Card as="a" interactive>Videos</Card>;
-    // @ts-expect-error Native activating hosts must opt into interactive styling.
-    const staticButton = <Card as="button" type="button">Start</Card>;
-    // @ts-expect-error Form controls are not supported Card hosts.
-    const inputHost = <Card as="input" interactive onClick={() => undefined} />;
-    // @ts-expect-error Form controls are not supported Card hosts.
-    const selectHost = <Card as="select" interactive onClick={() => undefined} />;
-    // @ts-expect-error Form controls are not supported Card hosts.
-    const textareaHost = <Card as="textarea" interactive onClick={() => undefined} />;
-    // @ts-expect-error Summary has native disclosure activation semantics.
-    const summaryHost = <Card as="summary" interactive onClick={() => undefined}>Details</Card>;
+    const customHost = (
+      // @ts-expect-error Custom hosts cannot guarantee the rendered element's semantics.
+      <Card as={Wrapper} interactive onClick={() => undefined}>
+        Custom
+      </Card>
+    );
+    const staticLink = (
+      // @ts-expect-error Native activating hosts must opt into interactive styling.
+      <Card as="a" href="/videos">
+        Videos
+      </Card>
+    );
+    const hrefLessLink = (
+      // @ts-expect-error An anchor without href has no native keyboard semantics.
+      <Card as="a" interactive>
+        Videos
+      </Card>
+    );
+    const staticButton = (
+      // @ts-expect-error Native activating hosts must opt into interactive styling.
+      <Card as="button" type="button">
+        Start
+      </Card>
+    );
+    const inputHost = (
+      // @ts-expect-error Form controls are not supported Card hosts.
+      <Card as="input" interactive onClick={() => undefined} />
+    );
+    const selectHost = (
+      // @ts-expect-error Form controls are not supported Card hosts.
+      <Card as="select" interactive onClick={() => undefined} />
+    );
+    const textareaHost = (
+      // @ts-expect-error Form controls are not supported Card hosts.
+      <Card as="textarea" interactive onClick={() => undefined} />
+    );
+    const summaryHost = (
+      // @ts-expect-error Summary has native disclosure activation semantics.
+      <Card as="summary" interactive onClick={() => undefined}>
+        Details
+      </Card>
+    );
 
     expect([
       customHost,

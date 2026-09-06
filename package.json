@@ -2,6 +2,7 @@
   "name": "workout-deck",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
     "dev": "NODE_ENV=development next dev",
     "dev:verify": "node scripts/start-verification.mjs",
@@ -9,7 +10,10 @@
     "start": "NODE_ENV=production NEXT_DIST_DIR=.next-build next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:fast": "pnpm lint && pnpm type-check && pnpm test",
+    "generate": "prisma generate",
+    "prepare": "pnpm generate && simple-git-hooks"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.0",
@@ -34,8 +38,21 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "jsdom": "^29.0.2",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.9.6",
+    "simple-git-hooks": "^2.14.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.4"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "node scripts/pre-commit.mjs"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --check",
+      "eslint --max-warnings=0 --no-warn-ignored"
+    ],
+    "*.{js,jsx,mjs,cjs,json,css,md}": "prettier --check"
   }
 }
